@@ -149,6 +149,9 @@ def lc_deadlines():
 
 
 def closure_pending(settings):
+	# ["is", "not set"] compiles to ifnull(field,'')='' -- it matches both NULL and
+	# '' . ["in", ["", None]] becomes SQL `IN ('', NULL)`, which never matches NULL,
+	# so it silently skipped every shipment whose XAR/EBRC had never been touched.
 	blocks = []
 
 	xar_days = settings.xar_pending_days or 7
@@ -157,7 +160,7 @@ def closure_pending(settings):
 		"Export Shipment",
 		filters={
 			"payment_status": "Fully Paid",
-			"xar_no": ["in", ["", None]],
+			"xar_no": ["is", "not set"],
 			"final_payment_date": ["<=", xar_cutoff],
 		},
 		fields=["name", "customer_name", "final_payment_date", "shipping_bill_no"],
@@ -185,8 +188,8 @@ def closure_pending(settings):
 	ebrc_rows = frappe.get_all(
 		"Export Shipment",
 		filters={
-			"xar_no": ["not in", ["", None]],
-			"ebrc_no": ["in", ["", None]],
+			"xar_no": ["is", "set"],
+			"ebrc_no": ["is", "not set"],
 			"xar_date": ["<=", ebrc_cutoff],
 		},
 		fields=["name", "customer_name", "xar_no", "xar_date"],

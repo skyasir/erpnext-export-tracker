@@ -3,13 +3,34 @@ frappe.ui.form.on("Sales Order", {
 		if (frm.doc.docstatus !== 1 || !frm.doc.custom_is_export) return;
 
 		frm.add_custom_button(__("Export Shipment"), () => {
+			const create = () =>
+				frappe.call({
+					method:
+						"erpnext_export_tracker.export_tracker.doctype.export_shipment.export_shipment.make_export_shipment",
+					args: { sales_order: frm.doc.name },
+					freeze: true,
+					callback(r) {
+						if (r.message) frappe.set_route("Form", "Export Shipment", r.message);
+					},
+				});
+
+			// an additional shipment means a part-shipment -- worth confirming
 			frappe.call({
 				method:
-					"erpnext_export_tracker.export_tracker.doctype.export_shipment.export_shipment.make_export_shipment",
+					"erpnext_export_tracker.export_tracker.doctype.export_shipment.export_shipment.count_shipments",
 				args: { sales_order: frm.doc.name },
-				freeze: true,
 				callback(r) {
-					if (r.message) frappe.set_route("Form", "Export Shipment", r.message);
+					if (r.message) {
+						frappe.confirm(
+							__(
+								"This order already has {0} shipment(s). Create another one for a part-shipment?",
+								[r.message]
+							),
+							create
+						);
+					} else {
+						create();
+					}
 				},
 			});
 		}, __("Create"));

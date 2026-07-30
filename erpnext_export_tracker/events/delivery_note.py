@@ -36,7 +36,7 @@ def find_shipment_from_orders(doc):
 	for order in orders:
 		name = frappe.db.get_value(
 			"Export Shipment",
-			{"sales_order": order, "docstatus": ["<", 2], "delivery_note": ["in", ["", None]]},
+			{"sales_order": order, "docstatus": ["<", 2], "delivery_note": ["is", "not set"]},
 			"name",
 		)
 		if name:

@@ -416,7 +416,9 @@ def get_customer_country(customer):
 
 def resolve_document_template(destination_country, payment_route):
 	"""Most specific template wins: country+route, then country, then route, then fallback."""
-	blank = ["in", ["", None]]
+	# NOT ["in", ["", None]] -- that compiles to SQL `IN ('', NULL)` and NULL never
+	# matches, which made every country-blank route template unreachable.
+	blank = ["is", "not set"]
 	candidates = []
 	if destination_country:
 		candidates.append(
@@ -437,20 +439,33 @@ def resolve_document_template(destination_country, payment_route):
 	)
 
 
-def create_export_shipment(sales_order, throw_if_exists=False):
-	"""Shared by the Sales Order hook and the Create button."""
+def create_export_shipment(sales_order, guard_duplicates=False):
+	"""Shared by the Sales Order hook and the Create button.
+
+	An order legitimately gets more than one shipment when it part-ships, so an
+	existing shipment is not by itself a reason to refuse. What we do refuse is a
+	second shipment while an earlier one is still untouched at the first state --
+	that is the accidental double-click, not a part-shipment.
+	"""
 	if not sales_order:
 		return None
 
 	so = frappe.get_doc("Sales Order", sales_order)
 
-	existing = frappe.db.exists("Export Shipment", {"sales_order": so.name, "docstatus": ["<", 2]})
-	if existing and throw_if_exists:
-		frappe.throw(
-			_("Export Shipment {0} already exists for this Sales Order.").format(
-				frappe.utils.get_link_to_form("Export Shipment", existing)
-			)
+	if guard_duplicates:
+		unused = frappe.db.get_value(
+			"Export Shipment",
+			{"sales_order": so.name, "docstatus": ["<", 2], "status": STATE_ORDER[0]},
+			"name",
 		)
+		if unused:
+			frappe.throw(
+				_("Export Shipment {0} already exists for this Sales Order and has not been "
+				  "started yet. Use it, or move it forward before opening another shipment for "
+				  "a part-shipment.").format(
+					frappe.utils.get_link_to_form("Export Shipment", unused)
+				)
+			)
 
 	doc = frappe.new_doc("Export Shipment")
 	doc.sales_order = so.name
@@ -471,9 +486,19 @@ def create_export_shipment(sales_order, throw_if_exists=False):
 
 @frappe.whitelist()
 def make_export_shipment(sales_order):
-	"""Called from the Create button on a submitted export Sales Order."""
+	"""Called from the Create button on a submitted export Sales Order.
+
+	Creating an additional shipment for the same order is how a part-shipment is
+	recorded -- each one carries its own shipping bill, BL, XAR and EBRC.
+	"""
 	if not frappe.has_permission("Export Shipment", "create"):
 		frappe.throw(_("Not permitted to create an Export Shipment."), frappe.PermissionError)
 
-	doc = create_export_shipment(sales_order, throw_if_exists=True)
+	doc = create_export_shipment(sales_order, guard_duplicates=True)
 	return doc.name if doc else None
+
+
+@frappe.whitelist()
+def count_shipments(sales_order):
+	"""Lets the Create button warn before opening a second shipment."""
+	return frappe.db.count("Export Shipment", {"sales_order": sales_order, "docstatus": ["<", 2]})
