@@ -424,6 +424,7 @@ POST_LC = POST_BANK + [
 ]
 
 # destination specific certification -- SOP G.c.i.5.a and G.c.ii.1.c
+# these are the destinations Supreme ships to; add your own as needed
 COUNTRY_EXTRAS = {
 	"Nigeria": [
 		("SONCAP Certificate", 1, "Consultant", "Pre-Shipment"),
