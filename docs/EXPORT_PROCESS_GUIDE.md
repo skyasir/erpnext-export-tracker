@@ -16,6 +16,7 @@ Every step lists **who** does it, **where** it happens, **what to fill in**, and
 ## Contents
 
 - [Part 0 — One-time setup](#part-0--one-time-setup)
+  - [0.7 How the form reveals itself](#07-how-the-form-reveals-itself)
 - [Part 1 — Enquiry and requirement gathering](#part-1--enquiry-and-requirement-gathering-sop-a-b)
 - [Part 2 — Quotation](#part-2--quotation-sop-c)
 - [Part 3 — Follow-up and revision](#part-3--follow-up-and-revision-sop-d-e)
@@ -147,6 +148,32 @@ No new roles are created. The workflow uses the standard ones:
 | Accounts Manager | EBRC generation |
 
 ---
+
+### 0.7 How the form reveals itself
+
+The Export Shipment form does not show all of its sections at once. Each section
+appears when the shipment reaches the stage that needs it, and **stays visible
+from then on** — so you never lose sight of the CHA quotes after shipping.
+
+| Section | Appears at |
+|---|---|
+| References, Consignee & Buyer, Carriage & Terms, Freight & CHA Comparison, Letter of Credit, Remarks | immediately |
+| Pre-Shipment Documents, Payment | Indent Approved |
+| Container & Dispatch, Insurance | Freight Finalised |
+| Shipping Bill | Customs Docs Prepared |
+| Post-Shipment Documents | Container Loaded |
+| Document Submission | Shipped |
+| Bank Closure | Docs Submitted |
+| Export Incentive | Bank Submission Done |
+
+Every section appears at or before the stage where its fields are first
+demanded, so the disclosure can never block you from advancing. That property is
+enforced by a test (`tests/test_section_visibility.py`), not just intended —
+adding a gate that demands a field from a not-yet-visible section will fail it.
+
+The Letter of Credit section is the one exception to stage-based reveal: it keys
+off **Post-Shipment Document Route** instead, because the LC has to be accepted
+long before shipment.
 
 ## Part 1 — Enquiry and requirement gathering *(SOP A, B)*
 

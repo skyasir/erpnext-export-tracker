@@ -33,6 +33,7 @@ class ExportShipment(Document):
 		self.sync_cha_quotes()
 		self.update_payment_status()
 		self.stamp_management_signature()
+		self.stage_index = self.state_index()
 		self.stamp_stage_dates()
 		self.validate_state_requirements()
 
