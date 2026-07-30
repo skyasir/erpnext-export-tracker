@@ -1,0 +1,64 @@
+{%- set s = frappe.get_doc("Export Tracker Settings") -%}
+{%- set company = frappe.get_doc("Company", doc.company) -%}
+{%- set si = frappe.get_doc("Sales Invoice", doc.sales_invoice) if doc.sales_invoice else None -%}
+{%- set cur = (si.currency if si else doc.currency) or "" -%}
+{%- macro txt(v) -%}{{ (v or "") | replace("&", "&amp;") }}{%- endmacro -%}
+{%- macro blk(v) -%}{{ (v or "") | replace("&", "&amp;") | replace("\n", "<br>") }}{%- endmacro -%}
+
+<style>
+	.ltr { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #000; line-height: 1.6; }
+	.ltr .hd { text-align: center; font-weight: bold; font-size: 12pt; text-decoration: underline;
+	           margin-bottom: 18px; }
+	.ltr table.kv { width: 100%; border-collapse: collapse; margin: 12px 0; }
+	.ltr table.kv td { border: 1px solid #000; padding: 4px 6px; font-size: 9.5pt; }
+	.ltr .k { font-weight: bold; width: 38%; }
+	.ltr .sign { margin-top: 50px; text-align: right; font-weight: bold; }
+</style>
+
+<div class="ltr">
+	<div class="hd">MARINE INSURANCE DECLARATION</div>
+
+	<p style="text-align: right;">
+		Date: {{ frappe.utils.formatdate(doc.insurance_premium_requested_on or frappe.utils.nowdate(), "dd.MM.yyyy") }}
+	</p>
+
+	<p>To,<br><b>{{ doc.insurance_company or s.default_insurance_company or "" }}</b></p>
+
+	<p>Dear Sir / Madam,</p>
+
+	<p>
+		Please arrange marine insurance cover for the consignment detailed below and advise us of the
+		premium payable so that the payment can be released.
+	</p>
+
+	<table class="kv">
+		<tr><td class="k">Invoice No. &amp; Date</td>
+			<td>{{ doc.sales_invoice or "-" }}{% if si %} dated {{ frappe.utils.formatdate(si.posting_date, "dd.MM.yyyy") }}{% endif %}</td></tr>
+		<tr><td class="k">Sum to be Insured</td>
+			<td>{{ frappe.utils.fmt_money(si.grand_total if si else doc.invoice_amount, currency=cur) }}</td></tr>
+		<tr><td class="k">Description of Goods</td>
+			<td>{{ (si.custom_goods_description if si else "") or s.goods_description or "-" }}</td></tr>
+		<tr><td class="k">No. of Packages</td><td>{{ doc.no_of_packages or "-" }}</td></tr>
+		<tr><td class="k">Gross Weight</td>
+			<td>{{ "%.3f" | format(doc.gross_weight or 0) }} KGS</td></tr>
+		<tr><td class="k">Container No(s)</td><td>{{ (doc.container_no or "-") | replace("\n", ", ") }}</td></tr>
+		<tr><td class="k">Vessel / Flight</td><td>{{ doc.vessel_flight_no or "-" }}</td></tr>
+		<tr><td class="k">From / To</td>
+			<td>{{ doc.port_of_loading or "-" }} to {{ doc.port_of_discharge or "-" }}</td></tr>
+		<tr><td class="k">Final Destination</td><td>{{ doc.final_destination or "-" }}</td></tr>
+		<tr><td class="k">Date of Sailing (ETD)</td>
+			<td>{{ frappe.utils.formatdate(doc.etd, "dd.MM.yyyy") if doc.etd else "-" }}</td></tr>
+		<tr><td class="k">Bill of Lading No.</td><td>{{ doc.bl_no or "-" }}</td></tr>
+		<tr><td class="k">Terms of Delivery</td>
+			<td>{{ doc.incoterm or "-" }} {{ doc.named_place or "" }}</td></tr>
+	</table>
+
+	<p>Thanking you,</p>
+
+	<div class="sign">
+		For {{ txt(company.company_name) }}
+		<div style="height: 50px;"></div>
+		{% if s.authorised_signatory %}<u>{{ s.authorised_signatory | upper }}</u><br>{% endif %}
+		<u>Authorised Signatory</u>
+	</div>
+</div>

@@ -1,0 +1,69 @@
+{%- set s = frappe.get_doc("Export Tracker Settings") -%}
+{%- set company = frappe.get_doc("Company", doc.company) -%}
+{%- set si = frappe.get_doc("Sales Invoice", doc.sales_invoice) if doc.sales_invoice else None -%}
+{%- set cur = (si.currency if si else doc.currency) or "" -%}
+{%- macro txt(v) -%}{{ (v or "") | replace("&", "&amp;") }}{%- endmacro -%}
+{%- macro blk(v) -%}{{ (v or "") | replace("&", "&amp;") | replace("\n", "<br>") }}{%- endmacro -%}
+
+<style>
+	.ltr { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #000; line-height: 1.6; }
+	.ltr .hd { text-align: center; font-weight: bold; font-size: 12pt; text-decoration: underline;
+	           margin-bottom: 18px; }
+	.ltr table.kv { width: 100%; border-collapse: collapse; margin: 12px 0; }
+	.ltr table.kv td { border: 1px solid #000; padding: 4px 6px; font-size: 9.5pt; }
+	.ltr .k { font-weight: bold; width: 45%; }
+	.ltr .rt { text-align: right; }
+	.ltr ol { margin: 8px 0 8px 18px; }
+	.ltr .sign { margin-top: 45px; text-align: right; font-weight: bold; }
+</style>
+
+<div class="ltr">
+	<div class="hd">DECLARATION OF EXPORT VALUE</div>
+
+	<p style="text-align: right;">
+		Date: {{ frappe.utils.formatdate(doc.shipping_bill_date or frappe.utils.nowdate(), "dd.MM.yyyy") }}
+	</p>
+
+	<p>
+		We, <b>{{ txt(company.company_name) }}</b>, IEC No. <b>{{ s.iec_code or "" }}</b>, declare the
+		export value of the consignment covered by Invoice No.
+		<b>{{ doc.sales_invoice or "" }}</b> and Shipping Bill No.
+		<b>{{ doc.shipping_bill_no or "" }}</b> as under:
+	</p>
+
+	<table class="kv">
+		<tr><td class="k">Ex-Works / FOB Value</td>
+			<td class="rt">{{ frappe.utils.fmt_money(si.net_total if si else 0, currency=cur) }}</td></tr>
+		{% if si %}
+			{% for tax in si.taxes %}
+			<tr><td class="k">{{ txt(tax.description) }}</td>
+				<td class="rt">{{ frappe.utils.fmt_money(tax.tax_amount, currency=cur) }}</td></tr>
+			{% endfor %}
+		{% endif %}
+		<tr><td class="k">Total Invoice Value ({{ doc.incoterm or "" }})</td>
+			<td class="rt"><b>{{ frappe.utils.fmt_money(si.grand_total if si else doc.invoice_amount, currency=cur) }}</b></td></tr>
+		<tr><td class="k">Freight Paid to CHA / Shipping Line</td>
+			<td class="rt">{{ frappe.utils.fmt_money(doc.selected_freight_amount, currency=doc.freight_currency or cur) }}</td></tr>
+		<tr><td class="k">Insurance Policy No.</td>
+			<td class="rt">{{ doc.insurance_policy_no or "Not Applicable" }}</td></tr>
+		<tr><td class="k">Terms of Delivery</td>
+			<td class="rt">{{ doc.incoterm or "-" }} {{ doc.named_place or "" }}</td></tr>
+		<tr><td class="k">Terms of Payment</td><td class="rt">{{ doc.terms_of_payment or "-" }}</td></tr>
+		<tr><td class="k">Country of Final Destination</td>
+			<td class="rt">{{ doc.country_of_final_destination or "-" }}</td></tr>
+	</table>
+
+	<p>We further declare that:</p>
+	<ol>
+		<li>There is no other consideration, monetary or otherwise, beyond the invoice value declared above.</li>
+		<li>The buyer and the seller are not related parties.</li>
+		<li>The particulars stated above are true and correct to the best of our knowledge and belief.</li>
+	</ol>
+
+	<div class="sign">
+		For {{ txt(company.company_name) }}
+		<div style="height: 50px;"></div>
+		{% if s.authorised_signatory %}<u>{{ s.authorised_signatory | upper }}</u><br>{% endif %}
+		<u>Authorised Signatory</u>
+	</div>
+</div>
