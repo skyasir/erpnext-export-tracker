@@ -89,6 +89,15 @@ ready before ETD, LC deadlines) and the accounts role (XAR pending after payment
 EBRC pending after XAR, realisation window closing). Every alert is also a
 report, so a missing SMTP account costs you the email, never the information.
 
+## Documentation
+
+**[docs/EXPORT_PROCESS_GUIDE.md](docs/EXPORT_PROCESS_GUIDE.md)** — step-by-step
+operating guide for the whole flow: one-time setup, enquiry, quotation,
+finalisation, indent, CHA comparison, container and sealing, both document sets,
+the LC sub-flow, payment, bank closure and the incentive handoff. Includes every
+validation message, the workflow/role matrix, a field-to-print map and
+troubleshooting.
+
 ## Setup after install
 
 1. **Export Tracker Settings** — fill in IEC code, End Use Code, PAN, authorised
