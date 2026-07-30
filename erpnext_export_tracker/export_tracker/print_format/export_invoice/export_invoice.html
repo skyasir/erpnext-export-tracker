@@ -1,0 +1,221 @@
+{%- set s = frappe.get_doc("Export Tracker Settings") -%}
+{%- set company = frappe.get_doc("Company", doc.company) -%}
+{%- set cur = doc.currency -%}
+{%- set hsn = [] -%}
+{%- for item in doc.items -%}
+	{%- if item.gst_hsn_code and item.gst_hsn_code not in hsn -%}
+		{%- set _ = hsn.append(item.gst_hsn_code) -%}
+	{%- endif -%}
+{%- endfor -%}
+{%- macro txt(v) -%}{{ (v or "") | replace("&", "&amp;") }}{%- endmacro -%}
+{%- macro blk(v) -%}{{ (v or "") | replace("&", "&amp;") | replace("\n", "<br>") }}{%- endmacro -%}
+
+<style>
+	.ei { width: 100%; border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;
+	      font-size: 8.5pt; color: #000; table-layout: fixed; }
+	.ei td, .ei th { border: 1px solid #000; padding: 2px 4px; vertical-align: top;
+	                 word-wrap: break-word; }
+	.ei .t { text-align: center; font-size: 13pt; font-weight: bold; letter-spacing: .5px; }
+	.ei .lbl { text-align: center; font-weight: bold; font-size: 7.5pt; }
+	.ei .ctr { text-align: center; }
+	.ei .rt { text-align: right; }
+	.ei .b { font-weight: bold; }
+	.ei .nb { border: none; }
+	.ei .grp { text-align: center; font-weight: bold; text-decoration: underline; }
+	.ei .sm { font-size: 7.5pt; }
+	.ei .tot { font-weight: bold; text-align: right; }
+	.ei .sig { height: 60px; vertical-align: bottom; text-align: right; font-weight: bold; }
+</style>
+
+<table class="ei">
+	<!-- title -->
+	<tr>
+		<td class="t" colspan="7">EXPORT INVOICE</td>
+	</tr>
+
+	<!-- exporter / invoice no -->
+	<tr>
+		<td class="b" colspan="3">EXPORTER:</td>
+		<td colspan="4">
+			<span class="b">Invoice No. &amp; Date: {{ doc.name }}</span>
+			&nbsp;&nbsp;&nbsp;
+			<span class="b">Date: {{ frappe.utils.formatdate(doc.posting_date, "dd.MM.yyyy") }}</span>
+		</td>
+	</tr>
+	<tr>
+		<td colspan="3">
+			<span class="b">{{ txt(company.company_name) | upper }}</span><br>
+			{% if s.exporter_address %}{{ blk(s.exporter_address) }}
+			{% elif doc.company_address_display %}{{ doc.company_address_display }}
+			{% endif %}
+			{% if s.exporter_tel %}<br>TEL.: {{ s.exporter_tel }}{% endif %}
+			{% if s.exporter_email %}<br>EMAIL ID: {{ s.exporter_email }}{% endif %}
+		</td>
+		<td colspan="4" style="padding: 0;">
+			<table class="ei" style="border: none;">
+				<tr><td class="nb">IEC Code: {{ s.iec_code or "" }}</td></tr>
+				<tr><td>GSTIN/UIN: {{ doc.company_gstin or "" }}</td></tr>
+				<tr><td>End Use Code: {{ s.end_use_code or "" }}</td></tr>
+				<tr><td style="border-bottom: none;">PAN No.: {{ s.pan_no or "" }}</td></tr>
+			</table>
+		</td>
+	</tr>
+
+	<!-- consignee / buyer -->
+	<tr>
+		<td class="b" colspan="3">CONSIGNEE:</td>
+		<td class="b" colspan="4">BUYER:</td>
+	</tr>
+	<tr>
+		<td colspan="3">
+			<span class="b">{{ txt(doc.custom_consignee_name or doc.customer_name) }}</span><br>
+			{{ blk(doc.custom_consignee_address or doc.address_display) }}
+		</td>
+		<td colspan="4">
+			<span class="b">{{ txt(doc.custom_buyer_name or doc.custom_consignee_name or doc.customer_name) }}</span><br>
+			{{ blk(doc.custom_buyer_address or doc.custom_consignee_address or doc.address_display) }}
+		</td>
+	</tr>
+
+	<!-- carriage grid : cols 1-2 pairs, col 3 = terms + bankers -->
+	<tr>
+		<td class="lbl" colspan="1">PRE CARRIAGE BY</td>
+		<td class="lbl" colspan="2">PLACE OF RECEIPT BY PRE CARRIER</td>
+		<td class="lbl" colspan="4">TERMS OF DELIVERY &amp; PAYMENT</td>
+	</tr>
+	<tr>
+		<td class="ctr">{{ doc.custom_pre_carriage_by or "" }}</td>
+		<td class="ctr" colspan="2">{{ doc.custom_place_of_receipt or "" }}</td>
+		<td class="ctr" colspan="4">{{ doc.incoterm or "" }}</td>
+	</tr>
+	<tr>
+		<td class="lbl">VESSEL /FLIGHT NO.</td>
+		<td class="lbl" colspan="2">PORT OF LOADING</td>
+		<td class="ctr" colspan="4">{{ doc.custom_terms_of_payment or doc.payment_terms_template or "" }}</td>
+	</tr>
+	<tr>
+		<td class="ctr">{{ doc.custom_vessel_flight_no or "" }}</td>
+		<td class="ctr" colspan="2">{{ doc.custom_port_of_loading or "" }}</td>
+		<td colspan="4" rowspan="6" style="vertical-align: top;">
+			<span class="b">OUR BANKERS: {{ txt(s.banker_name) }}</span>
+			{% if s.banker_address %}<br>Address: {{ s.banker_address | replace("\n", " ") }}{% endif %}
+			{% if s.bank_account_no %}<br>A/C No.: {{ s.bank_account_no }}{% endif %}
+			{% if s.ifsc_code %}<br>IFSC Code: {{ s.ifsc_code }}{% endif %}
+			{% if s.swift_code %}<br>SWIFT Code: {{ s.swift_code }}{% endif %}
+		</td>
+	</tr>
+	<tr>
+		<td class="lbl">PORT OF DISCHARGE</td>
+		<td class="lbl" colspan="2">FINAL DESTINATION</td>
+	</tr>
+	<tr>
+		<td class="ctr">{{ doc.custom_port_of_discharge or "" }}</td>
+		<td class="ctr" colspan="2">{{ doc.custom_final_destination or "" }}</td>
+	</tr>
+	<tr>
+		<td class="lbl">COUNTRY OF ORIGIN</td>
+		<td class="lbl" colspan="2">COUNTRY OF FINAL DESTINATION</td>
+	</tr>
+	<tr>
+		<td class="ctr">{{ doc.custom_country_of_origin or "INDIA" }}</td>
+		<td class="ctr" colspan="2">{{ doc.custom_country_of_final_destination or "" }}</td>
+	</tr>
+	<tr>
+		<td class="nb" style="border-top: none; border-left: 1px solid #000;">&nbsp;</td>
+		<td class="nb" colspan="2" style="border-top: none;">&nbsp;</td>
+	</tr>
+
+	<!-- items -->
+	<tr>
+		<td class="lbl" style="width: 13%;">MARKS &amp; NOS.<br>CONTAINER NO.</td>
+		<td class="lbl" style="width: 6%;">ITEM<br>NO.</td>
+		<td class="lbl" style="width: 37%;">DESCRIPTION OF GOODS</td>
+		<td class="lbl" style="width: 11%;">TOTAL<br>QUANTITY</td>
+		<td class="lbl" style="width: 7%;">UOM</td>
+		<td class="lbl" style="width: 12%;">RATE<br>({{ cur }})</td>
+		<td class="lbl" style="width: 14%;">TOTAL VALUE<br>({{ cur }})</td>
+	</tr>
+
+	<tr>
+		<td rowspan="{{ (doc.items | length) + 2 }}" class="ctr" style="vertical-align: middle;">
+			{% if doc.custom_marks_and_nos %}
+				{{ blk(doc.custom_marks_and_nos) }}
+			{% else %}
+				{{ txt(company.company_name) | upper }}<br><br>
+				{{ txt(doc.custom_consignee_name or doc.customer_name) }}
+			{% endif %}
+		</td>
+		<td class="grp" colspan="6">
+			{{ txt(doc.custom_goods_description or s.goods_description) }}{% if hsn %} - {{ hsn | join(", ") }}{% endif %}
+		</td>
+	</tr>
+	<tr>
+		<td class="grp" colspan="6">
+			{% if doc.custom_container_no %}CONTAINER NO.: {{ doc.custom_container_no }}{% else %}&nbsp;{% endif %}
+		</td>
+	</tr>
+
+	{% for item in doc.items %}
+	<tr>
+		<td class="ctr">{{ loop.index }}</td>
+		<td>
+			{{ txt(item.item_name) | upper }}
+			{% set extra = (item.description or "") | striptags | trim %}
+			{% if extra and extra | lower != (item.item_name or "") | lower %}
+				<br><span class="sm">{{ txt(extra) }}</span>
+			{% endif %}
+		</td>
+		<td class="ctr">{{ "%g" | format(item.qty or 0) }}</td>
+		<td class="ctr">{{ (item.uom or "") | upper }}</td>
+		<td class="rt">{{ frappe.utils.fmt_money(item.rate, currency=cur) }}</td>
+		<td class="rt">{{ frappe.utils.fmt_money(item.amount, currency=cur) }}</td>
+	</tr>
+	{% endfor %}
+
+	<!-- charge build-up -->
+	<tr>
+		<td class="tot" colspan="6">TOTAL EX-WORKS AMOUNT</td>
+		<td class="rt b">{{ frappe.utils.fmt_money(doc.net_total, currency=cur) }}</td>
+	</tr>
+	{% for tax in doc.taxes %}
+	<tr>
+		<td class="tot" colspan="6">
+			{% if tax.tax_amount and tax.tax_amount > 0 %}(+) {% endif %}{{ txt(tax.description) | upper }}
+		</td>
+		<td class="rt">{{ frappe.utils.fmt_money(tax.tax_amount, currency=cur) }}</td>
+	</tr>
+	{% endfor %}
+	<tr>
+		<td class="tot" colspan="6">TOTAL {{ (doc.incoterm or "") | upper }} AMOUNT</td>
+		<td class="rt b">{{ frappe.utils.fmt_money(doc.grand_total, currency=cur) }}</td>
+	</tr>
+
+	<!-- footer totals -->
+	<tr>
+		<td class="b" colspan="7">TOTAL NET WEIGHT: {{ "%.3f" | format(doc.custom_net_weight or 0) }} KGS</td>
+	</tr>
+	<tr>
+		<td class="b" colspan="7">TOTAL GROSS WEIGHT: {{ "%.3f" | format(doc.custom_gross_weight or 0) }} KGS</td>
+	</tr>
+	<tr>
+		<td class="b" colspan="7">TOTAL NO. OF PACKAGES: {{ doc.custom_no_of_packages or 0 }} PACKAGES</td>
+	</tr>
+	<tr>
+		<td class="b ctr" colspan="7">TOTAL AMOUNT IN WORDS: {{ (doc.in_words or "") | upper }}</td>
+	</tr>
+	<tr>
+		<td class="sm" colspan="7">
+			Declaration: {{ txt(s.declaration_text) or "We declare that this invoice show the actual price of goods described and that all particulars are true and correct." }}
+		</td>
+	</tr>
+	<tr>
+		<td class="sig" colspan="7">
+			<div style="text-align: right;">
+				{{ txt(company.company_name) }}
+				<div style="height: 45px;"></div>
+				{% if s.authorised_signatory %}<u>{{ s.authorised_signatory | upper }}</u><br>{% endif %}
+				<u>Authorised Signature</u>
+			</div>
+		</td>
+	</tr>
+</table>

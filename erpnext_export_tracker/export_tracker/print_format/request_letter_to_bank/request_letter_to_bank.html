@@ -1,0 +1,88 @@
+{%- set s = frappe.get_doc("Export Tracker Settings") -%}
+{%- set company = frappe.get_doc("Company", doc.company) -%}
+{%- set si = frappe.get_doc("Sales Invoice", doc.sales_invoice) if doc.sales_invoice else None -%}
+{%- set is_lc = doc.payment_route == "Through Letter of Credit" -%}
+{%- macro txt(v) -%}{{ (v or "") | replace("&", "&amp;") }}{%- endmacro -%}
+{%- macro blk(v) -%}{{ (v or "") | replace("&", "&amp;") | replace("\n", "<br>") }}{%- endmacro -%}
+
+<style>
+	.ltr { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #000; line-height: 1.6; }
+	.ltr .hd { text-align: center; font-weight: bold; font-size: 12pt; text-decoration: underline;
+	           margin-bottom: 18px; }
+	.ltr table.kv { width: 100%; border-collapse: collapse; margin: 12px 0; }
+	.ltr table.kv td { border: 1px solid #000; padding: 4px 6px; font-size: 9.5pt; }
+	.ltr .k { font-weight: bold; width: 35%; }
+	.ltr ol { margin: 8px 0 8px 18px; }
+	.ltr .sign { margin-top: 55px; text-align: right; font-weight: bold; }
+</style>
+
+<div class="ltr">
+	<div class="hd">
+		REQUEST LETTER TO BANK -
+		{% if is_lc %}NEGOTIATION OF EXPORT DOCUMENTS UNDER LETTER OF CREDIT
+		{% else %}EXPORT BILL ON COLLECTION{% endif %}
+	</div>
+
+	<p style="text-align: right;">
+		Date: {{ frappe.utils.formatdate(doc.docs_submitted_on or frappe.utils.nowdate(), "dd.MM.yyyy") }}
+	</p>
+
+	<p>To,<br>
+	The Branch Manager<br>
+	<b>{{ txt(s.banker_name) }}</b><br>
+	{{ blk(s.banker_address) }}</p>
+
+	<p>Dear Sir / Madam,</p>
+
+	<p>
+		We enclose herewith the following export documents and request you to
+		{% if is_lc %}
+			negotiate the same under Letter of Credit No. <b>{{ doc.lc_no or "" }}</b>
+			issued by <b>{{ doc.lc_issuing_bank or "" }}</b>
+		{% else %}
+			forward the same to the consignee's bank on collection basis
+		{% endif %}
+		and credit the proceeds to our account no. <b>{{ s.bank_account_no or "" }}</b>.
+	</p>
+
+	<table class="kv">
+		<tr><td class="k">Invoice No. &amp; Date</td>
+			<td>{{ doc.sales_invoice or "-" }}{% if si %} dated {{ frappe.utils.formatdate(si.posting_date, "dd.MM.yyyy") }}{% endif %}</td></tr>
+		<tr><td class="k">Invoice Value</td>
+			<td>{{ frappe.utils.fmt_money(si.grand_total if si else doc.invoice_amount, currency=(si.currency if si else doc.currency)) }}</td></tr>
+		<tr><td class="k">Drawee / Consignee</td><td>{{ txt(doc.consignee_name) or "-" }}</td></tr>
+		<tr><td class="k">Consignee Bank</td><td>{{ doc.submitted_to_bank or "-" }}</td></tr>
+		<tr><td class="k">Shipping Bill No. &amp; Date</td>
+			<td>{{ doc.shipping_bill_no or "-" }}{% if doc.shipping_bill_date %} dated {{ frappe.utils.formatdate(doc.shipping_bill_date, "dd.MM.yyyy") }}{% endif %}</td></tr>
+		<tr><td class="k">Bill of Lading No. &amp; Date</td>
+			<td>{{ doc.bl_no or "-" }}{% if doc.bl_date %} dated {{ frappe.utils.formatdate(doc.bl_date, "dd.MM.yyyy") }}{% endif %}</td></tr>
+		<tr><td class="k">Terms of Payment</td><td>{{ doc.terms_of_payment or "-" }}</td></tr>
+		{% if is_lc %}
+		<tr><td class="k">LC No. / Expiry</td>
+			<td>{{ doc.lc_no or "-" }}
+			{% if doc.lc_expiry_date %} / expires {{ frappe.utils.formatdate(doc.lc_expiry_date, "dd.MM.yyyy") }}{% endif %}</td></tr>
+		{% endif %}
+	</table>
+
+	<p><b>Documents enclosed (in duplicate - one set for our bank, one for the consignee bank):</b></p>
+	<ol>
+		{% for row in doc.post_shipment_documents %}
+			{% if row.is_required %}
+			<li>
+				{{ txt(row.document_name) }}
+				{% if row.document_no %} - {{ row.document_no }}{% endif %}
+				{% if not row.prepared %} <b>(PENDING)</b>{% endif %}
+			</li>
+			{% endif %}
+		{% endfor %}
+	</ol>
+
+	<p>Kindly acknowledge receipt. Thanking you,</p>
+
+	<div class="sign">
+		For {{ txt(company.company_name) }}
+		<div style="height: 50px;"></div>
+		{% if s.authorised_signatory %}<u>{{ s.authorised_signatory | upper }}</u><br>{% endif %}
+		<u>Authorised Signatory</u>
+	</div>
+</div>

@@ -1,0 +1,150 @@
+{%- set s = frappe.get_doc("Export Tracker Settings") -%}
+{%- set company = frappe.get_doc("Company", doc.company) -%}
+{%- set cur = doc.currency -%}
+{%- set hsn = [] -%}
+{%- for item in doc.items -%}
+	{%- if item.gst_hsn_code and item.gst_hsn_code not in hsn -%}
+		{%- set _ = hsn.append(item.gst_hsn_code) -%}
+	{%- endif -%}
+{%- endfor -%}
+{%- macro txt(v) -%}{{ (v or "") | replace("&", "&amp;") }}{%- endmacro -%}
+{%- macro blk(v) -%}{{ (v or "") | replace("&", "&amp;") | replace("\n", "<br>") }}{%- endmacro -%}
+
+<style>
+	.pi { width: 100%; border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;
+	      font-size: 8.5pt; color: #000; table-layout: fixed; }
+	.pi td { border: 1px solid #000; padding: 2px 4px; vertical-align: top; word-wrap: break-word; }
+	.pi .t { text-align: center; font-size: 13pt; font-weight: bold; }
+	.pi .lbl { text-align: center; font-weight: bold; font-size: 7.5pt; }
+	.pi .ctr { text-align: center; }
+	.pi .rt { text-align: right; }
+	.pi .b { font-weight: bold; }
+	.pi .grp { text-align: center; font-weight: bold; text-decoration: underline; }
+	.pi .tot { font-weight: bold; text-align: right; }
+	.pi .sig { height: 60px; vertical-align: bottom; }
+</style>
+
+<table class="pi">
+	<tr><td class="t" colspan="6">PROFORMA INVOICE</td></tr>
+
+	<tr>
+		<td class="b" colspan="3">EXPORTER:</td>
+		<td colspan="3">
+			<span class="b">Proforma No. &amp; Date: {{ doc.name }}
+			&nbsp;&nbsp; Date: {{ frappe.utils.formatdate(doc.transaction_date, "dd.MM.yyyy") }}</span>
+		</td>
+	</tr>
+	<tr>
+		<td colspan="3">
+			<span class="b">{{ txt(company.company_name) | upper }}</span><br>
+			{% if s.exporter_address %}{{ blk(s.exporter_address) }}{% endif %}
+			{% if s.exporter_tel %}<br>TEL.: {{ s.exporter_tel }}{% endif %}
+			{% if s.exporter_email %}<br>EMAIL ID: {{ s.exporter_email }}{% endif %}
+		</td>
+		<td colspan="3">
+			IEC Code: {{ s.iec_code or "" }}<br>
+			GSTIN/UIN: {{ doc.company_gstin or "" }}<br>
+			End Use Code: {{ s.end_use_code or "" }}<br>
+			PAN No.: {{ s.pan_no or "" }}
+		</td>
+	</tr>
+
+	<tr>
+		<td class="b" colspan="3">CONSIGNEE:</td>
+		<td class="b" colspan="3">BUYER:</td>
+	</tr>
+	<tr>
+		<td colspan="3">
+			<span class="b">{{ txt(doc.custom_consignee_name or doc.customer_name) }}</span><br>
+			{{ blk(doc.custom_consignee_address or doc.address_display) }}
+		</td>
+		<td colspan="3">
+			<span class="b">{{ txt(doc.custom_buyer_name or doc.custom_consignee_name or doc.customer_name) }}</span><br>
+			{{ blk(doc.custom_buyer_address or doc.custom_consignee_address) }}
+		</td>
+	</tr>
+
+	<tr>
+		<td class="lbl" colspan="2">TERMS OF DELIVERY</td>
+		<td class="lbl" colspan="2">TERMS OF PAYMENT</td>
+		<td class="lbl" colspan="2">PORT OF DISCHARGE / FINAL DESTINATION</td>
+	</tr>
+	<tr>
+		<td class="ctr" colspan="2">{{ doc.incoterm or "" }} {{ doc.named_place or "" }}</td>
+		<td class="ctr" colspan="2">{{ doc.custom_terms_of_payment or doc.payment_terms_template or "" }}</td>
+		<td class="ctr" colspan="2">
+			{{ doc.custom_port_of_discharge or "" }}
+			{% if doc.custom_final_destination %} / {{ doc.custom_final_destination }}{% endif %}
+		</td>
+	</tr>
+	<tr>
+		<td colspan="6">
+			<span class="b">OUR BANKERS: {{ txt(s.banker_name) }}</span>
+			{% if s.banker_address %} | Address: {{ s.banker_address | replace("\n", " ") }}{% endif %}
+			{% if s.bank_account_no %} | A/C No.: {{ s.bank_account_no }}{% endif %}
+			{% if s.ifsc_code %} | IFSC: {{ s.ifsc_code }}{% endif %}
+			{% if s.swift_code %} | SWIFT: {{ s.swift_code }}{% endif %}
+		</td>
+	</tr>
+
+	<tr>
+		<td class="lbl" style="width: 7%;">ITEM NO.</td>
+		<td class="lbl" style="width: 41%;">DESCRIPTION OF GOODS</td>
+		<td class="lbl" style="width: 12%;">TOTAL QUANTITY</td>
+		<td class="lbl" style="width: 8%;">UOM</td>
+		<td class="lbl" style="width: 14%;">RATE ({{ cur }})</td>
+		<td class="lbl" style="width: 18%;">TOTAL VALUE ({{ cur }})</td>
+	</tr>
+	<tr>
+		<td class="grp" colspan="6">
+			{{ txt(s.goods_description) }}{% if hsn %} - {{ hsn | join(", ") }}{% endif %}
+		</td>
+	</tr>
+
+	{% for item in doc.items %}
+	<tr>
+		<td class="ctr">{{ loop.index }}</td>
+		<td>
+			{{ txt(item.item_name) | upper }}
+			{% set extra = (item.description or "") | striptags | trim %}
+			{% if extra and extra | lower != (item.item_name or "") | lower %}
+				<br><span style="font-size: 7.5pt;">{{ txt(extra) }}</span>
+			{% endif %}
+		</td>
+		<td class="ctr">{{ "%g" | format(item.qty or 0) }}</td>
+		<td class="ctr">{{ (item.uom or "") | upper }}</td>
+		<td class="rt">{{ frappe.utils.fmt_money(item.rate, currency=cur) }}</td>
+		<td class="rt">{{ frappe.utils.fmt_money(item.amount, currency=cur) }}</td>
+	</tr>
+	{% endfor %}
+
+	<tr>
+		<td class="tot" colspan="5">TOTAL EX-WORKS AMOUNT</td>
+		<td class="rt b">{{ frappe.utils.fmt_money(doc.net_total, currency=cur) }}</td>
+	</tr>
+	{% for tax in doc.taxes %}
+	<tr>
+		<td class="tot" colspan="5">
+			{% if tax.tax_amount and tax.tax_amount > 0 %}(+) {% endif %}{{ txt(tax.description) | upper }}
+		</td>
+		<td class="rt">{{ frappe.utils.fmt_money(tax.tax_amount, currency=cur) }}</td>
+	</tr>
+	{% endfor %}
+	<tr>
+		<td class="tot" colspan="5">TOTAL {{ (doc.incoterm or "") | upper }} AMOUNT</td>
+		<td class="rt b">{{ frappe.utils.fmt_money(doc.grand_total, currency=cur) }}</td>
+	</tr>
+	<tr>
+		<td class="b ctr" colspan="6">TOTAL AMOUNT IN WORDS: {{ (doc.in_words or "") | upper }}</td>
+	</tr>
+	<tr>
+		<td class="sig" colspan="6">
+			<div style="text-align: right;">
+				<span class="b">{{ txt(company.company_name) }}</span>
+				<div style="height: 45px;"></div>
+				{% if s.authorised_signatory %}<u>{{ s.authorised_signatory | upper }}</u><br>{% endif %}
+				<u>Authorised Signature</u>
+			</div>
+		</td>
+	</tr>
+</table>

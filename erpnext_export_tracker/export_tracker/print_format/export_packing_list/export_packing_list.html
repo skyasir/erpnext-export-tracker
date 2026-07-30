@@ -1,0 +1,121 @@
+{%- set s = frappe.get_doc("Export Tracker Settings") -%}
+{%- set company = frappe.get_doc("Company", doc.company) -%}
+{%- macro txt(v) -%}{{ (v or "") | replace("&", "&amp;") }}{%- endmacro -%}
+{%- macro blk(v) -%}{{ (v or "") | replace("&", "&amp;") | replace("\n", "<br>") }}{%- endmacro -%}
+
+<style>
+	.pl { width: 100%; border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;
+	      font-size: 8.5pt; color: #000; table-layout: fixed; }
+	.pl td, .pl th { border: 1px solid #000; padding: 2px 4px; vertical-align: top;
+	                 word-wrap: break-word; }
+	.pl .t { text-align: center; font-size: 13pt; font-weight: bold; }
+	.pl .lbl { text-align: center; font-weight: bold; font-size: 7.5pt; }
+	.pl .ctr { text-align: center; }
+	.pl .b { font-weight: bold; }
+	.pl .grp { text-align: center; font-weight: bold; text-decoration: underline; }
+	.pl .sig { height: 60px; vertical-align: bottom; }
+</style>
+
+<table class="pl">
+	<tr><td class="t" colspan="6">PACKING LIST</td></tr>
+
+	<tr>
+		<td class="b" colspan="3">EXPORTER:</td>
+		<td colspan="3">
+			<span class="b">Invoice No. &amp; Date: {{ doc.name }}
+			&nbsp;&nbsp; Date: {{ frappe.utils.formatdate(doc.posting_date, "dd.MM.yyyy") }}</span>
+		</td>
+	</tr>
+	<tr>
+		<td colspan="3">
+			<span class="b">{{ txt(company.company_name) | upper }}</span><br>
+			{% if s.exporter_address %}{{ blk(s.exporter_address) }}
+			{% elif doc.company_address_display %}{{ doc.company_address_display }}{% endif %}
+		</td>
+		<td colspan="3">
+			IEC Code: {{ s.iec_code or "" }}<br>
+			GSTIN/UIN: {{ doc.company_gstin or "" }}<br>
+			PAN No.: {{ s.pan_no or "" }}
+		</td>
+	</tr>
+
+	<tr>
+		<td class="b" colspan="3">CONSIGNEE:</td>
+		<td class="b" colspan="3">BUYER:</td>
+	</tr>
+	<tr>
+		<td colspan="3">
+			<span class="b">{{ txt(doc.custom_consignee_name or doc.customer_name) }}</span><br>
+			{{ blk(doc.custom_consignee_address or doc.address_display) }}
+		</td>
+		<td colspan="3">
+			<span class="b">{{ txt(doc.custom_buyer_name or doc.custom_consignee_name or doc.customer_name) }}</span><br>
+			{{ blk(doc.custom_buyer_address or doc.custom_consignee_address) }}
+		</td>
+	</tr>
+
+	<tr>
+		<td class="lbl">PORT OF LOADING</td>
+		<td class="lbl" colspan="2">PORT OF DISCHARGE</td>
+		<td class="lbl">FINAL DESTINATION</td>
+		<td class="lbl" colspan="2">CONTAINER NO.</td>
+	</tr>
+	<tr>
+		<td class="ctr">{{ doc.custom_port_of_loading or "" }}</td>
+		<td class="ctr" colspan="2">{{ doc.custom_port_of_discharge or "" }}</td>
+		<td class="ctr">{{ doc.custom_final_destination or "" }}</td>
+		<td class="ctr" colspan="2">{{ doc.custom_container_no or "" }}</td>
+	</tr>
+
+	<tr>
+		<td class="lbl" style="width: 8%;">ITEM NO.</td>
+		<td class="lbl" style="width: 42%;">DESCRIPTION OF GOODS</td>
+		<td class="lbl" style="width: 12%;">TOTAL QUANTITY</td>
+		<td class="lbl" style="width: 8%;">UOM</td>
+		<td class="lbl" style="width: 15%;">NET WEIGHT (KGS)</td>
+		<td class="lbl" style="width: 15%;">GROSS WEIGHT (KGS)</td>
+	</tr>
+
+	<tr>
+		<td class="grp" colspan="6">
+			{{ txt(doc.custom_goods_description or s.goods_description) }}
+		</td>
+	</tr>
+
+	{% for item in doc.items %}
+	<tr>
+		<td class="ctr">{{ loop.index }}</td>
+		<td>
+			{{ txt(item.item_name) | upper }}
+			{% set extra = (item.description or "") | striptags | trim %}
+			{% if extra and extra | lower != (item.item_name or "") | lower %}
+				<br><span style="font-size: 7.5pt;">{{ txt(extra) }}</span>
+			{% endif %}
+		</td>
+		<td class="ctr">{{ "%g" | format(item.qty or 0) }}</td>
+		<td class="ctr">{{ (item.uom or "") | upper }}</td>
+		<td class="ctr">{{ "%g" | format(item.total_weight or 0) }}</td>
+		<td class="ctr">&nbsp;</td>
+	</tr>
+	{% endfor %}
+
+	<tr>
+		<td class="b" colspan="6">TOTAL NET WEIGHT: {{ "%.3f" | format(doc.custom_net_weight or 0) }} KGS</td>
+	</tr>
+	<tr>
+		<td class="b" colspan="6">TOTAL GROSS WEIGHT: {{ "%.3f" | format(doc.custom_gross_weight or 0) }} KGS</td>
+	</tr>
+	<tr>
+		<td class="b" colspan="6">TOTAL NO. OF PACKAGES: {{ doc.custom_no_of_packages or 0 }} PACKAGES</td>
+	</tr>
+	<tr>
+		<td class="sig" colspan="6">
+			<div style="text-align: right;">
+				<span class="b">{{ txt(company.company_name) }}</span>
+				<div style="height: 45px;"></div>
+				{% if s.authorised_signatory %}<u>{{ s.authorised_signatory | upper }}</u><br>{% endif %}
+				<u>Authorised Signature</u>
+			</div>
+		</td>
+	</tr>
+</table>

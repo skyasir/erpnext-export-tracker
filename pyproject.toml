@@ -1,0 +1,17 @@
+[project]
+name = "erpnext_export_tracker"
+authors = [{ name = "Smurik Solutions", email = "info@smurik.com" }]
+description = "Exporter-side shipment tracking for ERPNext (India) - CHA freight comparison, export document checklists, LC handling, bank closure (XAR/EBRC) and incentive handoff"
+requires-python = ">=3.10"
+readme = "README.md"
+dynamic = ["version"]
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.bench.dev-dependencies]
+
+[tool.bench.frappe-dependencies]
+frappe = ">=15.0.0,<17.0.0"
+erpnext = ">=15.0.0,<17.0.0"

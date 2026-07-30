@@ -1,0 +1,295 @@
+{
+ "actions": [],
+ "creation": "2026-07-30 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "exporter_section",
+  "iec_code",
+  "end_use_code",
+  "pan_no",
+  "exporter_address",
+  "column_break_exporter",
+  "exporter_tel",
+  "exporter_email",
+  "authorised_signatory",
+  "goods_description",
+  "declaration_text",
+  "banker_section",
+  "banker_name",
+  "banker_address",
+  "column_break_banker",
+  "bank_account_no",
+  "ifsc_code",
+  "swift_code",
+  "defaults_section",
+  "default_pre_carriage_by",
+  "default_place_of_receipt",
+  "column_break_defaults",
+  "default_port_of_loading",
+  "default_country_of_origin",
+  "column_break_defaults2",
+  "default_insurance_company",
+  "incentive_consultant",
+  "reminder_section",
+  "enable_reminders",
+  "notification_role",
+  "accounts_notification_role",
+  "column_break_reminder",
+  "followup_reminder_days",
+  "docs_pending_days_before_etd",
+  "column_break_reminder2",
+  "xar_pending_days",
+  "ebrc_pending_days",
+  "realisation_period_months"
+ ],
+ "fields": [
+  {
+   "fieldname": "exporter_section",
+   "fieldtype": "Section Break",
+   "label": "Exporter Details (printed on export documents)"
+  },
+  {
+   "fieldname": "iec_code",
+   "fieldtype": "Data",
+   "label": "IEC Code"
+  },
+  {
+   "fieldname": "end_use_code",
+   "fieldtype": "Data",
+   "label": "End Use Code"
+  },
+  {
+   "fieldname": "pan_no",
+   "fieldtype": "Data",
+   "label": "PAN No"
+  },
+  {
+   "description": "Printed in the EXPORTER block; leave blank to use the company address",
+   "fieldname": "exporter_address",
+   "fieldtype": "Small Text",
+   "label": "Exporter Address"
+  },
+  {
+   "fieldname": "column_break_exporter",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "exporter_tel",
+   "fieldtype": "Data",
+   "label": "Telephone"
+  },
+  {
+   "fieldname": "exporter_email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "authorised_signatory",
+   "fieldtype": "Data",
+   "label": "Authorised Signatory"
+  },
+  {
+   "description": "Heading printed above the item rows, e.g. Poultry Keeping Equipments & parts in ckd condition",
+   "fieldname": "goods_description",
+   "fieldtype": "Small Text",
+   "label": "Default Description of Goods"
+  },
+  {
+   "default": "We declare that this invoice show the actual price of goods described and that all particulars are true and correct.",
+   "fieldname": "declaration_text",
+   "fieldtype": "Small Text",
+   "label": "Invoice Declaration"
+  },
+  {
+   "fieldname": "banker_section",
+   "fieldtype": "Section Break",
+   "label": "Banker Details (printed on export invoice)"
+  },
+  {
+   "fieldname": "banker_name",
+   "fieldtype": "Data",
+   "label": "Bank Name"
+  },
+  {
+   "fieldname": "banker_address",
+   "fieldtype": "Small Text",
+   "label": "Bank Address"
+  },
+  {
+   "fieldname": "column_break_banker",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bank_account_no",
+   "fieldtype": "Data",
+   "label": "A/C No"
+  },
+  {
+   "fieldname": "ifsc_code",
+   "fieldtype": "Data",
+   "label": "IFSC Code"
+  },
+  {
+   "fieldname": "swift_code",
+   "fieldtype": "Data",
+   "label": "SWIFT Code"
+  },
+  {
+   "fieldname": "defaults_section",
+   "fieldtype": "Section Break",
+   "label": "Shipment Defaults"
+  },
+  {
+   "default": "BY ROAD",
+   "fieldname": "default_pre_carriage_by",
+   "fieldtype": "Data",
+   "label": "Default Pre-Carriage By"
+  },
+  {
+   "fieldname": "default_place_of_receipt",
+   "fieldtype": "Data",
+   "label": "Default Place of Receipt"
+  },
+  {
+   "fieldname": "column_break_defaults",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_port_of_loading",
+   "fieldtype": "Data",
+   "label": "Default Port of Loading"
+  },
+  {
+   "default": "INDIA",
+   "fieldname": "default_country_of_origin",
+   "fieldtype": "Data",
+   "label": "Default Country of Origin"
+  },
+  {
+   "fieldname": "column_break_defaults2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "New India Assurance Company",
+   "fieldname": "default_insurance_company",
+   "fieldtype": "Data",
+   "label": "Default Insurance Company"
+  },
+  {
+   "default": "M/s Parth Impex",
+   "fieldname": "incentive_consultant",
+   "fieldtype": "Data",
+   "label": "Export Incentive Consultant"
+  },
+  {
+   "fieldname": "reminder_section",
+   "fieldtype": "Section Break",
+   "label": "Reminders"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_reminders",
+   "fieldtype": "Check",
+   "label": "Enable Reminders"
+  },
+  {
+   "default": "Sales User",
+   "depends_on": "enable_reminders",
+   "fieldname": "notification_role",
+   "fieldtype": "Link",
+   "label": "Notify Users With Role",
+   "options": "Role"
+  },
+  {
+   "default": "Accounts User",
+   "depends_on": "enable_reminders",
+   "fieldname": "accounts_notification_role",
+   "fieldtype": "Link",
+   "label": "Notify Accounts Role",
+   "options": "Role"
+  },
+  {
+   "fieldname": "column_break_reminder",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "7",
+   "depends_on": "enable_reminders",
+   "description": "Remind if an open export quotation has had no follow-up for these many days",
+   "fieldname": "followup_reminder_days",
+   "fieldtype": "Int",
+   "label": "Quotation Follow-up Reminder Days"
+  },
+  {
+   "default": "7",
+   "depends_on": "enable_reminders",
+   "fieldname": "docs_pending_days_before_etd",
+   "fieldtype": "Int",
+   "label": "Document Alert Days Before ETD"
+  },
+  {
+   "fieldname": "column_break_reminder2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "7",
+   "depends_on": "enable_reminders",
+   "fieldname": "xar_pending_days",
+   "fieldtype": "Int",
+   "label": "XAR Pending Days After Full Payment"
+  },
+  {
+   "default": "15",
+   "depends_on": "enable_reminders",
+   "fieldname": "ebrc_pending_days",
+   "fieldtype": "Int",
+   "label": "EBRC Pending Days After XAR"
+  },
+  {
+   "default": "9",
+   "description": "Statutory period to realise export proceeds; used by the Bank Closure Ageing report",
+   "fieldname": "realisation_period_months",
+   "fieldtype": "Int",
+   "label": "Realisation Period (Months)"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-07-30 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Export Tracker",
+ "name": "Export Tracker Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
