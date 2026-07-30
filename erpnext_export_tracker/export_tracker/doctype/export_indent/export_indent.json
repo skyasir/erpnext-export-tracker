@@ -18,6 +18,7 @@
   "destination_country",
   "items_section",
   "items",
+  "totals_section",
   "total_qty",
   "column_break_totals",
   "total_amount",
@@ -124,6 +125,11 @@
    "fieldtype": "Table",
    "label": "Items",
    "options": "Export Indent Item"
+  },
+  {
+   "fieldname": "totals_section",
+   "fieldtype": "Section Break",
+   "label": "Totals"
   },
   {
    "fieldname": "total_qty",
