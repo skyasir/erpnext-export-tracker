@@ -364,18 +364,20 @@ One row per agent:
 | CHA | the supplier |
 | Quote Date | when they quoted |
 | Currency | quote currency |
-| Freight | base freight |
-| Other Charges | everything else they add |
-| **Total** | computed for you — freight + other charges |
-| **Transit Days** | *SOP G.c.i.2.b* |
-| **Free Days at Destination** | *SOP G.c.i.2.c* — free days for unloading |
+| Freight | base freight (row editor) |
+| Other Charges | everything else they add (row editor) |
+| **Total** | shown in the grid — freight + other charges, computed for you |
+| **Transit Days** | shown in the grid — *SOP G.c.i.2.b* |
+| **Free Days** | shown in the grid — free days for unloading at destination, *SOP G.c.i.2.c* |
 | Container Type | what they quoted for |
 | Selected | tick the winner |
 | Remarks | anything worth remembering |
 
-The grid puts price, transit time and free days in adjacent columns so the
-comparison the SOP asks for is a single glance, and the whole quote history stays
-on the shipment for the next negotiation.
+The grid shows exactly the three axes the SOP compares on — **Total, Transit
+Days, Free Days** — plus the CHA and which one won, so the comparison is a single
+glance. Freight and Other Charges live in the row editor (click the pencil);
+Total is what you compare. The whole quote history stays on the shipment for the
+next negotiation.
 
 ### Step 6.3 — Select the winner
 Tick **Selected** on one row. The parent fields **Selected CHA**,
@@ -435,6 +437,11 @@ clears both tables and starts fresh.
 ### Step 8.3 — Work the list
 For each row: prepare the document, then fill **Document No**, **Date**, attach
 the file, and tick **Prepared**.
+
+The grid deliberately shows only **Document, Prepared and Document No** — those
+are what you scan. **Required**, **Responsibility**, **Stage**, **Date**,
+**Attachment** and **Remarks** are one click away in the row editor (the pencil),
+and *Pending Export Documents* reports on responsibility across every shipment.
 
 The standard pre-shipment list covers commercial invoice, packing list, SCOMET
 letter, annexure, examination report, export value declaration, VGM, Form 13,
