@@ -46,7 +46,7 @@ def get_data(filters):
 	if filters.get("customer"):
 		conditions["customer"] = filters.get("customer")
 	if not filters.get("include_closed"):
-		conditions["ebrc_no"] = ["in", ["", None]]
+		conditions["ebrc_no"] = ["is", "not set"]
 
 	rows = frappe.get_all(
 		"Export Shipment",
