@@ -30,7 +30,7 @@
    "options": "Pre-Shipment\nPost-Shipment"
   },
   {
-   "columns": 1,
+   "columns": 2,
    "default": "1",
    "fieldname": "is_required",
    "fieldtype": "Check",

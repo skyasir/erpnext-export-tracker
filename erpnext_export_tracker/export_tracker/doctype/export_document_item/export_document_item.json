@@ -17,7 +17,7 @@
  ],
  "fields": [
   {
-   "columns": 3,
+   "columns": 5,
    "fieldname": "document_name",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -32,24 +32,20 @@
    "options": "Pre-Shipment\nPost-Shipment"
   },
   {
-   "columns": 1,
    "default": "1",
    "fieldname": "is_required",
    "fieldtype": "Check",
-   "in_list_view": 1,
    "label": "Required"
   },
   {
-   "columns": 1,
    "default": "Export Dept",
    "fieldname": "responsibility",
    "fieldtype": "Select",
-   "in_list_view": 1,
    "label": "Responsibility",
    "options": "Export Dept\nCHA\nAccounts\nConsultant\nBank\nCustomer\nInsurer"
   },
   {
-   "columns": 1,
+   "columns": 2,
    "default": "0",
    "fieldname": "prepared",
    "fieldtype": "Check",
@@ -57,7 +53,7 @@
    "label": "Prepared"
   },
   {
-   "columns": 2,
+   "columns": 3,
    "fieldname": "document_no",
    "fieldtype": "Data",
    "in_list_view": 1,

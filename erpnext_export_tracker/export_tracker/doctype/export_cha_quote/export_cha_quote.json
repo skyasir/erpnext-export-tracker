@@ -39,10 +39,8 @@
    "options": "Currency"
   },
   {
-   "columns": 1,
    "fieldname": "freight_amount",
    "fieldtype": "Currency",
-   "in_list_view": 1,
    "label": "Freight",
    "options": "currency"
   },
@@ -53,7 +51,7 @@
    "options": "currency"
   },
   {
-   "columns": 1,
+   "columns": 2,
    "fieldname": "total_amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
@@ -62,7 +60,7 @@
    "read_only": 1
   },
   {
-   "columns": 1,
+   "columns": 2,
    "description": "Transit time in days -- SOP G.c.i.2.b",
    "fieldname": "transit_days",
    "fieldtype": "Int",
@@ -70,12 +68,12 @@
    "label": "Transit Days"
   },
   {
-   "columns": 1,
+   "columns": 2,
    "description": "Free days for unloading at destination -- SOP G.c.i.2.c",
    "fieldname": "free_days",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Free Days at Destination"
+   "label": "Free Days"
   },
   {
    "fieldname": "container_type",
@@ -83,7 +81,7 @@
    "label": "Container Type"
   },
   {
-   "columns": 1,
+   "columns": 2,
    "default": "0",
    "fieldname": "is_selected",
    "fieldtype": "Check",
