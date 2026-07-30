@@ -172,13 +172,11 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "New India Assurance Company",
    "fieldname": "default_insurance_company",
    "fieldtype": "Data",
    "label": "Default Insurance Company"
   },
   {
-   "default": "M/s Parth Impex",
    "fieldname": "incentive_consultant",
    "fieldtype": "Data",
    "label": "Export Incentive Consultant"
