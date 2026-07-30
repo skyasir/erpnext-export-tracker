@@ -13,6 +13,7 @@ cd <bench>/sites
 | Script | Covers |
 |---|---|
 | `uat_core.py` | auto-create on export SO submit, no-create for domestic, CHA comparison + selection gates, country-driven checklist, every stage gate, the EXP invoice series and charge build-up, the Export Invoice print content, payment → XAR → bank → EBRC chain, Export Indent approval sequence, all 10 print formats, all 6 reports, cancel protection, reminder job |
+| `test_section_visibility.py` | proves the progressive section-disclosure rules cannot deadlock the workflow: every field a gate demands sits in a section already visible at the stage the action is taken from |
 | `uat_routes_and_hooks.py` | the LC route gates, the Through Bank document set, part-shipment, the Delivery Note hook, advance-against-order payment, Payment Entry / Sales Invoice cancel paths, the invoice→shipment fallback lookup, the remaining country templates, reports with rows actually in them, PDF generation |
 
 ## Before running: set the site constants
@@ -32,6 +33,25 @@ COST_CENTER = "..."
 DEBIT_TO = "..."
 BANK = "..."
 ```
+
+## `uat_routes_and_hooks.py` does NOT fully roll back
+
+`uat_core.py` and `test_section_visibility.py` roll back cleanly. **`uat_routes_and_hooks.py`
+does not** — it submits and cancels stock and accounting documents, and ERPNext
+commits internally during those, so `frappe.db.rollback()` cannot undo them.
+
+Run the cleanup afterwards:
+
+```bash
+../env/bin/python ../apps/erpnext_export_tracker/tests/cleanup_uat_data.py
+```
+
+`cleanup_uat_data.py` works from an explicit **allow-list of the records to keep**
+— nothing is date-swept. Edit `KEEP_SO` / `KEEP_SI` / `KEEP_SE` / `KEEP_PE` and the
+`BASELINE` naming-series values to match your site before running it, or it will
+delete documents you wanted. It also removes orphaned GL and Stock Ledger
+entries; because that last step uses raw SQL and bypasses the `Bin` cache, run
+`repost_stock(item, warehouse)` for any item the tests moved.
 
 ## Known environment dependencies
 
