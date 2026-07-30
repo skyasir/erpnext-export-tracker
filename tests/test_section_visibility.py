@@ -87,6 +87,33 @@ check("all thresholds use >= (never == or a range)",
       all(">=" in (df.depends_on or "") or not (df.depends_on or "").startswith("eval:doc.stage_index")
           for df in meta.fields if df.fieldtype == "Section Break"))
 
+# ------------------------------------------------- layout: tables get full width
+# A Column Break in the same section splits it into two columns and the grid
+# renders at half width, truncating its own headers. A section holding a Table
+# must hold nothing else that introduces a column.
+print("\n=== layout: every child table sits in a full-width section ===")
+for doctype in ("Export Shipment", "Export Indent", "Export Document Template"):
+	dmeta = frappe.get_meta(doctype)
+	section = None
+	buckets = {}
+	for df in dmeta.fields:
+		if df.fieldtype == "Section Break":
+			section = df.fieldname
+			buckets[section] = []
+		elif section:
+			buckets[section].append(df)
+
+	for sec, dfs in buckets.items():
+		tables = [d.fieldname for d in dfs if d.fieldtype == "Table"]
+		breaks = [d.fieldname for d in dfs if d.fieldtype == "Column Break"]
+		if not tables:
+			continue
+		check(
+			"%s / %s holds %s full width" % (doctype, sec, tables[0]),
+			not breaks,
+			"column breaks in the section: %s" % (breaks or "none"),
+		)
+
 # ------------------------------------------------- live: stage_index tracks status
 print("\n=== live: stage_index follows status ===")
 from frappe.utils import add_days, today  # noqa: E402

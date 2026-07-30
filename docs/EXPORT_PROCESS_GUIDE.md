@@ -157,14 +157,23 @@ from then on** — so you never lose sight of the CHA quotes after shipping.
 
 | Section | Appears at |
 |---|---|
-| References, Consignee & Buyer, Carriage & Terms, Freight & CHA Comparison, Letter of Credit, Remarks | immediately |
+| References, Consignee & Buyer, Carriage & Terms, Freight & CHA Comparison, Selected Freight, Letter of Credit, Remarks | immediately |
 | Pre-Shipment Documents, Payment | Indent Approved |
 | Container & Dispatch, Insurance | Freight Finalised |
 | Shipping Bill | Customs Docs Prepared |
-| Post-Shipment Documents | Container Loaded |
+| Post-Shipment Documents, Certificate of Origin & Bill of Lading | Container Loaded |
 | Document Submission | Shipped |
 | Bank Closure | Docs Submitted |
 | Export Incentive | Bank Submission Done |
+
+**Every child table sits alone in a full-width section.** A Frappe section that
+also contains a column break renders in two columns, which squeezes the grid to
+half width and truncates its own headers. So the CHA comparison, the two document
+checklists and the indent items each own their section, and the scalar fields that
+go with them live in the section immediately below — *Selected Freight* under the
+CHA grid, *Certificate of Origin & Bill of Lading* under the post-shipment
+checklist, *Totals* under the indent items. A test enforces this
+(`tests/test_section_visibility.py`), so it cannot be undone by accident.
 
 Every section appears at or before the stage where its fields are first
 demanded, so the disclosure can never block you from advancing. That property is

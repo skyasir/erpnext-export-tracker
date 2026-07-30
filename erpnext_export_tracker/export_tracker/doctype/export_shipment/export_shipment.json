@@ -49,6 +49,7 @@
   "eta",
   "freight_section",
   "cha_quotes",
+  "selected_freight_section",
   "selected_cha",
   "selected_freight_amount",
   "freight_currency",
@@ -84,6 +85,7 @@
   "leo_date",
   "post_shipment_section",
   "post_shipment_documents",
+  "coo_bl_section",
   "coo_type",
   "coo_no",
   "coo_date",
@@ -415,6 +417,11 @@
    "options": "Export CHA Quote"
   },
   {
+   "fieldname": "selected_freight_section",
+   "fieldtype": "Section Break",
+   "label": "Selected Freight"
+  },
+  {
    "fieldname": "selected_cha",
    "fieldtype": "Link",
    "label": "Selected CHA",
@@ -606,6 +613,12 @@
    "fieldtype": "Table",
    "label": "Post-Shipment Documents",
    "options": "Export Document Item"
+  },
+  {
+   "depends_on": "eval:doc.stage_index >= 5",
+   "fieldname": "coo_bl_section",
+   "fieldtype": "Section Break",
+   "label": "Certificate of Origin & Bill of Lading"
   },
   {
    "default": "Not Applicable",
