@@ -18,6 +18,7 @@
   "declaration_contact",
   "default_weighbridge",
   "customs_office",
+  "customs_office_air",
   "goods_description",
   "declaration_text",
   "banker_section",
@@ -120,7 +121,13 @@
    "default": "The Deputy Commissioner of Customs,\nExports Department",
    "fieldname": "customs_office",
    "fieldtype": "Small Text",
-   "label": "Customs Office Address"
+   "label": "Customs Office (Sea)"
+  },
+  {
+   "default": "Assistant Commissioner of Customs.\nSahar Air Cargo Complex.\nMumbai.",
+   "fieldname": "customs_office_air",
+   "fieldtype": "Small Text",
+   "label": "Customs Office (Air)"
   },
   {
    "description": "Heading printed above the item rows, e.g. Poultry Keeping Equipments & parts in ckd condition",

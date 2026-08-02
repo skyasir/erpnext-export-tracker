@@ -463,6 +463,8 @@ Nigeria, SGS for Uganda, and so on).
 |---|---|
 | SCOMET Letter | the SCOMET declaration |
 | Verified Gross Mass | one VGM form per container, from the Containers table |
+| FEMA Declaration | the Rule-7 declaration naming exporter and customs broker |
+| Customs Broker Authorization | authorises your CHA or courier (e.g. DHL) to clear on your behalf |
 | Export Value Declaration | value build-up + the standard declarations |
 | Letter of Undertaking | the customs undertaking |
 | Insurance Declaration | the request to your marine insurer |
@@ -482,6 +484,25 @@ automatically, running consecutively across the whole list.
 
 > Export documents print with **international digit grouping** (185,079.90), not
 > the site's Indian lakh format (1,85,079.90), because they are read abroad.
+
+### Sea and air produce different documents
+
+Set **Mode** on the shipment. The same print formats then produce the right
+variant:
+
+| | Sea | Air |
+|---|---|---|
+| SCOMET addressed to | Customs Office (Sea) in Settings | Customs Office (Air) — Sahar Air Cargo Complex |
+| SCOMET body | description and port, no HS code | HS code and the Category 3B/3D Appendix-3 wording |
+| Packing List | grouped by container, NOTIFY block | straight list, BUYER block, no container rows |
+
+Air courier shipments have no containers, so leave the Containers table empty —
+the packing list prints the lines straight through and the VGM does not apply.
+
+**Signatory** comes from the shipment's *Signatory & Customs Broker* section, and
+falls back to Export Tracker Settings when blank — your sea documents are signed
+by one person and your air ones by another. **Customs Broker / Courier** on the
+same section drives the FEMA declaration and the authorisation letter.
 
 ### Step 8.4 — Insurance, if applicable
 **Where:** Export Shipment → *Insurance*

@@ -1,0 +1,91 @@
+{%- set s = frappe.get_doc("Export Tracker Settings") -%}
+{%- set company = frappe.get_doc("Company", doc.company) -%}
+{%- set si = frappe.get_doc("Sales Invoice", doc.sales_invoice) if doc.sales_invoice else None -%}
+{%- macro txt(v) -%}{{ (v or "") | replace("&", "&amp;") }}{%- endmacro -%}
+{%- set broker = doc.customs_broker_name or "our customs broker" -%}
+{%- set signer = doc.signatory_name or s.declaration_signatory -%}
+{%- set signer_desig = doc.signatory_designation or s.declaration_designation -%}
+{%- set dt = (si.posting_date if si else None) or doc.shipping_bill_date -%}
+
+<style>
+	.auth { font-family: Arial, Helvetica, sans-serif; font-size: 10.5pt; color: #000; line-height: 1.55; }
+	.auth h3 { text-align: center; font-size: 11pt; font-weight: bold; text-decoration: underline;
+	           margin: 0 0 6px; }
+	.auth h4 { text-align: center; font-size: 10.5pt; font-weight: bold; margin: 0 0 20px; }
+	.auth p { margin: 0 0 14px; text-align: justify; }
+	.auth .boxes { width: 100%; border-collapse: separate; border-spacing: 22px 0; margin-top: 26px; }
+	.auth .boxes td { border: 1px solid #000; padding: 12px 14px; vertical-align: top;
+	                  width: 50%; height: 200px; font-size: 10.5pt; }
+	.auth .boxes b { font-size: 10.5pt; }
+	.auth .ln { margin-bottom: 9px; }
+</style>
+
+<div class="auth">
+	<h3>Authorization for Export shipment</h3>
+	<h4>To whomsoever it may concern</h4>
+
+	<p>
+		I /we authorization to <b>{{ txt(broker) }}</b>, including its group companies and their
+		customs brokers and agents, to act as our agent for the purpose of arranging customs
+		clearance at various customs location within India for all our Shipments, departing from
+		India under the provisions of the various Acts, Rules, regulations and procedure as laid
+		down under the regulatory environment of India to enable {{ txt(broker) }} to arrange
+		clearance of Export shipment on my/our behalf.
+	</p>
+
+	<p>
+		I/We also give our consent and authorize {{ txt(broker) }} to generate, sign, submit and
+		file on our behalf, in physical form or digitally, the various forms like e-way bill,
+		shipping bill, and other forms, as and when required, under various statutes for
+		undertaking the carriage, clearance or delivery of Shipment. I / we have been guided to
+		abide by the statutory requirements applicable for our Shipments and to keep myself /
+		ourselves updated with all applicable acts and regulations for my Shipments. I/We will be
+		responsible for the declaration being made to regulators based on our document /
+		instructions.
+	</p>
+
+	<p>
+		I/We further declare that our GSTIN / Know Your Customer (&ldquo;KYC&rdquo;) are valid and
+		we authorize {{ txt(broker) }} to use the same while undertaking transportation and
+		clearance of our shipments on our behalf.
+	</p>
+
+	<p>
+		This authority letter shall hold good for all proceedings and can be produced before Customs
+		and/or any statutory authority to confirm the authorization hereby given to
+		{{ txt(broker) }}. The above authorization to {{ txt(broker) }} supersedes all previous
+		authority letters issued in this behalf and shall remain valid, subsisting and continues
+		until revoked in writing.
+	</p>
+
+	<p>Thanking you,</p>
+	<p>Yours sincerely,</p>
+
+	<table class="boxes">
+		<tr>
+			<td>
+				<div class="ln"><b>Company Name</b></div>
+				<div class="ln">&nbsp;</div>
+				<div class="ln">GSTIN: <b>{{ (si.company_gstin if si else "") or "" }}</b></div>
+				<div class="ln">Signature:</div>
+				<div class="ln">Name : {{ txt(signer) }}</div>
+				<div class="ln">Designation: {{ txt(signer_desig) }}</div>
+				<div class="ln">Date : {{ frappe.utils.formatdate(dt, "dd.MM.yyyy") if dt else "" }}</div>
+				<div class="ln">Mobile No: {{ doc.signatory_contact or s.declaration_contact or "" }}</div>
+				<div class="ln">&nbsp;</div>
+				<div class="ln">Company Stamp</div>
+			</td>
+			<td>
+				<div class="ln"><b>Individual Shipper Name</b></div>
+				<div class="ln">&nbsp;</div>
+				<div class="ln">KYC Document :</div>
+				<div class="ln">KYC Document No :</div>
+				<div class="ln">&nbsp;</div>
+				<div class="ln">Signature:</div>
+				<div class="ln">&nbsp;</div>
+				<div class="ln">Date :</div>
+				<div class="ln">Mobile No. +</div>
+			</td>
+		</tr>
+	</table>
+</div>

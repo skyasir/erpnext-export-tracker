@@ -78,7 +78,7 @@
 	</div>
 
 	<div class="sign">
-		{{ txt(s.declaration_signatory) | upper }}<br>
+		{{ txt(doc.signatory_name or s.declaration_signatory) | upper }}<br>
 		(Authorized Signatory)
 	</div>
 </div>

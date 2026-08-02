@@ -3,21 +3,53 @@
 {%- set si = frappe.get_doc("Sales Invoice", doc.sales_invoice) if doc.sales_invoice else None -%}
 {%- macro txt(v) -%}{{ (v or "") | replace("&", "&amp;") }}{%- endmacro -%}
 {%- macro blk(v) -%}{{ (v or "") | replace("&", "&amp;") | replace("\n", "<br>") }}{%- endmacro -%}
-{%- set inv_date = si.posting_date if si else doc.shipping_bill_date -%}
+{%- set is_air = doc.mode == "Air" -%}
+{%- set inv_date = (si.posting_date if si else None) or doc.shipping_bill_date -%}
 {%- set goods = (si.custom_goods_description if si else "") or s.goods_description or "" -%}
+{%- set hsn = [] -%}
+{%- if si -%}{%- for it in si.items -%}
+	{%- if it.gst_hsn_code and it.gst_hsn_code not in hsn -%}{%- set _ = hsn.append(it.gst_hsn_code) -%}{%- endif -%}
+{%- endfor -%}{%- endif -%}
 
 <style>
 	.ltr { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #000; line-height: 1.7; }
 	.ltr .u { text-decoration: underline; font-weight: bold; }
+	.ltr .ctr { text-align: center; }
 	.ltr .sign { margin-top: 60px; font-weight: bold; }
 	.ltr p { margin: 12px 0; }
 	.ltr .ind { text-indent: 40px; }
 </style>
 
 <div class="ltr">
-	<p style="text-align: right;">
-		Date: {{ frappe.utils.formatdate(inv_date, "dd.MM.yyyy") if inv_date else "" }}
+{% if is_air %}
+	<p style="text-align: right;">Date : {{ frappe.utils.formatdate(inv_date, "dd.MM.yyyy") if inv_date else "" }}</p>
+
+	<p>To,<br>{{ blk(s.customs_office_air) }}</p>
+
+	<p class="ctr" style="margin: 26px 0;">SCOMET DECLARATION</p>
+
+	<p>Reference:&nbsp; Our Invoice : {{ doc.sales_invoice or "" }}
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Date: {{ frappe.utils.formatdate(inv_date, "dd.MM.yyyy") if inv_date else "" }}</p>
+
+	<p>
+		We are exporting {{ txt(goods) }} to {{ txt(doc.consignee_name) }}
+		destination country {{ txt(doc.country_of_final_destination) }}.
 	</p>
+
+	<p><b>HS CODE :</b> {{ hsn | join(", ") }}</p>
+
+	<p>
+		We hereby declare that these contains do not covered under SCOMET List OR any other
+		restrictive list of exports as per CATEGORY 3B/3D OF APPENDIX-3
+	</p>
+
+	<p>You are requested to allow the same to export.</p>
+
+	<p style="margin-top: 30px;">Your faithfully,</p>
+
+	<div class="sign">For, {{ txt(company.company_name) }}</div>
+{% else %}
+	<p style="text-align: right;">Date: {{ frappe.utils.formatdate(inv_date, "dd.MM.yyyy") if inv_date else "" }}</p>
 
 	<p>To,<br>{{ blk(s.customs_office) }}</p>
 
@@ -46,7 +78,6 @@
 		<b>{{ txt(doc.final_destination) }}</b>.
 	</p>
 
-	<div class="sign">
-		For, {{ txt(company.company_name) }}
-	</div>
+	<div class="sign">For, {{ txt(company.company_name) }}</div>
+{% endif %}
 </div>
