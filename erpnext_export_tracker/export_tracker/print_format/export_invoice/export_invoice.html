@@ -30,13 +30,13 @@
 <table class="ei">
 	<!-- title -->
 	<tr>
-		<td class="t" colspan="7">EXPORT INVOICE</td>
+		<td class="t" colspan="8">EXPORT INVOICE</td>
 	</tr>
 
 	<!-- exporter / invoice no -->
 	<tr>
 		<td class="b" colspan="3">EXPORTER:</td>
-		<td colspan="4">
+		<td colspan="5">
 			<span class="b">Invoice No. &amp; Date: {{ doc.name }}</span>
 			&nbsp;&nbsp;&nbsp;
 			<span class="b">Date: {{ frappe.utils.formatdate(doc.posting_date, "dd.MM.yyyy") }}</span>
@@ -51,7 +51,7 @@
 			{% if s.exporter_tel %}<br>TEL.: {{ s.exporter_tel }}{% endif %}
 			{% if s.exporter_email %}<br>EMAIL ID: {{ s.exporter_email }}{% endif %}
 		</td>
-		<td colspan="4" style="padding: 0;">
+		<td colspan="5" style="padding: 0;">
 			<table class="ei" style="border: none;">
 				<tr><td class="nb">IEC Code: {{ s.iec_code or "" }}</td></tr>
 				<tr><td>GSTIN/UIN: {{ doc.company_gstin or "" }}</td></tr>
@@ -64,16 +64,17 @@
 	<!-- consignee / buyer -->
 	<tr>
 		<td class="b" colspan="3">CONSIGNEE:</td>
-		<td class="b" colspan="4">BUYER:</td>
+		<td class="b" colspan="5">NOTIFY PARTY:</td>
 	</tr>
 	<tr>
 		<td colspan="3">
 			<span class="b">{{ txt(doc.custom_consignee_name or doc.customer_name) }}</span><br>
 			{{ blk(doc.custom_consignee_address or doc.address_display) }}
 		</td>
-		<td colspan="4">
-			<span class="b">{{ txt(doc.custom_buyer_name or doc.custom_consignee_name or doc.customer_name) }}</span><br>
-			{{ blk(doc.custom_buyer_address or doc.custom_consignee_address or doc.address_display) }}
+		<td colspan="5">
+			<span class="b">{{ txt(doc.custom_notify_name or doc.custom_buyer_name or doc.custom_consignee_name or doc.customer_name) }}</span><br>
+			{{ blk(doc.custom_notify_address or doc.custom_buyer_address or doc.custom_consignee_address) }}
+			{% if doc.custom_notify_email %}<br>EMAIL: {{ doc.custom_notify_email }}{% endif %}
 		</td>
 	</tr>
 
@@ -81,22 +82,22 @@
 	<tr>
 		<td class="lbl" colspan="1">PRE CARRIAGE BY</td>
 		<td class="lbl" colspan="2">PLACE OF RECEIPT BY PRE CARRIER</td>
-		<td class="lbl" colspan="4">TERMS OF DELIVERY &amp; PAYMENT</td>
+		<td class="lbl" colspan="5">TERMS OF DELIVERY &amp; PAYMENT</td>
 	</tr>
 	<tr>
 		<td class="ctr">{{ doc.custom_pre_carriage_by or "" }}</td>
 		<td class="ctr" colspan="2">{{ doc.custom_place_of_receipt or "" }}</td>
-		<td class="ctr" colspan="4">{{ doc.incoterm or "" }}</td>
+		<td class="ctr" colspan="5">{{ doc.incoterm or "" }}</td>
 	</tr>
 	<tr>
 		<td class="lbl">VESSEL /FLIGHT NO.</td>
 		<td class="lbl" colspan="2">PORT OF LOADING</td>
-		<td class="ctr" colspan="4">{{ doc.custom_terms_of_payment or doc.payment_terms_template or "" }}</td>
+		<td class="ctr" colspan="5">{{ doc.custom_terms_of_payment or doc.payment_terms_template or "" }}</td>
 	</tr>
 	<tr>
 		<td class="ctr">{{ doc.custom_vessel_flight_no or "" }}</td>
 		<td class="ctr" colspan="2">{{ doc.custom_port_of_loading or "" }}</td>
-		<td colspan="4" rowspan="6" style="vertical-align: top;">
+		<td colspan="5" rowspan="6" style="vertical-align: top;">
 			<span class="b">OUR BANKERS: {{ txt(s.banker_name) }}</span>
 			{% if s.banker_address %}<br>Address: {{ s.banker_address | replace("\n", " ") }}{% endif %}
 			{% if s.bank_account_no %}<br>A/C No.: {{ s.bank_account_no }}{% endif %}
@@ -128,8 +129,9 @@
 	<!-- items -->
 	<tr>
 		<td class="lbl" style="width: 13%;">MARKS &amp; NOS.<br>CONTAINER NO.</td>
-		<td class="lbl" style="width: 6%;">ITEM<br>NO.</td>
-		<td class="lbl" style="width: 37%;">DESCRIPTION OF GOODS</td>
+		<td class="lbl" style="width: 5%;">ITEM<br>NO.</td>
+		<td class="lbl" style="width: 9%;">HS CODE</td>
+		<td class="lbl" style="width: 29%;">DESCRIPTION OF GOODS</td>
 		<td class="lbl" style="width: 11%;">TOTAL<br>QUANTITY</td>
 		<td class="lbl" style="width: 7%;">UOM</td>
 		<td class="lbl" style="width: 12%;">RATE<br>({{ cur }})</td>
@@ -137,7 +139,7 @@
 	</tr>
 
 	<tr>
-		<td rowspan="{{ (doc.items | length) + 2 }}" class="ctr" style="vertical-align: middle;">
+		<td rowspan="{{ (doc.items | length) + 1 + ((doc.custom_container_no or '').split('\n') | map('trim') | select() | list | length or 1) }}" class="ctr" style="vertical-align: middle;">
 			{% if doc.custom_marks_and_nos %}
 				{{ blk(doc.custom_marks_and_nos) }}
 			{% else %}
@@ -145,19 +147,21 @@
 				{{ txt(doc.custom_consignee_name or doc.customer_name) }}
 			{% endif %}
 		</td>
-		<td class="grp" colspan="6">
+		<td class="grp" colspan="7">
 			{{ txt(doc.custom_goods_description or s.goods_description) }}{% if hsn %} - {{ hsn | join(", ") }}{% endif %}
 		</td>
 	</tr>
-	<tr>
-		<td class="grp" colspan="6">
-			{% if doc.custom_container_no %}CONTAINER NO.: {{ doc.custom_container_no }}{% else %}&nbsp;{% endif %}
-		</td>
-	</tr>
+	{% set containers = (doc.custom_container_no or "").split("\n") | map("trim") | select() | list %}
+	{% for cn in containers %}
+	<tr><td class="grp" colspan="7">CONTAINER NO : {{ cn }}</td></tr>
+	{% else %}
+	<tr><td class="grp" colspan="7">&nbsp;</td></tr>
+	{% endfor %}
 
 	{% for item in doc.items %}
 	<tr>
 		<td class="ctr">{{ loop.index }}</td>
+		<td class="ctr">{{ item.gst_hsn_code or "" }}</td>
 		<td>
 			{{ txt(item.item_name) | upper }}
 			{% set extra = (item.description or "") | striptags | trim %}
@@ -167,49 +171,49 @@
 		</td>
 		<td class="ctr">{{ "%g" | format(item.qty or 0) }}</td>
 		<td class="ctr">{{ (item.uom or "") | upper }}</td>
-		<td class="rt">{{ frappe.utils.fmt_money(item.rate, currency=cur) }}</td>
-		<td class="rt">{{ frappe.utils.fmt_money(item.amount, currency=cur) }}</td>
+		<td class="rt">{{ frappe.utils.fmt_money(item.rate, currency=cur, format="#,###.##") }}</td>
+		<td class="rt">{{ frappe.utils.fmt_money(item.amount, currency=cur, format="#,###.##") }}</td>
 	</tr>
 	{% endfor %}
 
 	<!-- charge build-up -->
 	<tr>
-		<td class="tot" colspan="6">TOTAL EX-WORKS AMOUNT</td>
-		<td class="rt b">{{ frappe.utils.fmt_money(doc.net_total, currency=cur) }}</td>
+		<td class="tot" colspan="7">TOTAL EX-WORKS AMOUNT</td>
+		<td class="rt b">{{ frappe.utils.fmt_money(doc.net_total, currency=cur, format="#,###.##") }}</td>
 	</tr>
 	{% for tax in doc.taxes %}
 	<tr>
-		<td class="tot" colspan="6">
+		<td class="tot" colspan="7">
 			{% if tax.tax_amount and tax.tax_amount > 0 %}(+) {% endif %}{{ txt(tax.description) | upper }}
 		</td>
-		<td class="rt">{{ frappe.utils.fmt_money(tax.tax_amount, currency=cur) }}</td>
+		<td class="rt">{{ frappe.utils.fmt_money(tax.tax_amount, currency=cur, format="#,###.##") }}</td>
 	</tr>
 	{% endfor %}
 	<tr>
-		<td class="tot" colspan="6">TOTAL {{ (doc.incoterm or "") | upper }} AMOUNT</td>
-		<td class="rt b">{{ frappe.utils.fmt_money(doc.grand_total, currency=cur) }}</td>
+		<td class="tot" colspan="7">TOTAL {{ (doc.incoterm or "") | upper }} AMOUNT</td>
+		<td class="rt b">{{ frappe.utils.fmt_money(doc.grand_total, currency=cur, format="#,###.##") }}</td>
 	</tr>
 
 	<!-- footer totals -->
 	<tr>
-		<td class="b" colspan="7">TOTAL NET WEIGHT: {{ "%.3f" | format(doc.custom_net_weight or 0) }} KGS</td>
+		<td class="b" colspan="8">TOTAL NET WEIGHT: {{ "%.3f" | format(doc.custom_net_weight or 0) }} KGS</td>
 	</tr>
 	<tr>
-		<td class="b" colspan="7">TOTAL GROSS WEIGHT: {{ "%.3f" | format(doc.custom_gross_weight or 0) }} KGS</td>
+		<td class="b" colspan="8">TOTAL GROSS WEIGHT: {{ "%.3f" | format(doc.custom_gross_weight or 0) }} KGS</td>
 	</tr>
 	<tr>
-		<td class="b" colspan="7">TOTAL NO. OF PACKAGES: {{ doc.custom_no_of_packages or 0 }} PACKAGES</td>
+		<td class="b" colspan="8">TOTAL NO. OF PACKAGES: {{ doc.custom_no_of_packages or 0 }} PACKAGES</td>
 	</tr>
 	<tr>
-		<td class="b ctr" colspan="7">TOTAL AMOUNT IN WORDS: {{ (doc.in_words or "") | upper }}</td>
+		<td class="b ctr" colspan="8">TOTAL AMOUNT IN WORDS: {{ (doc.in_words or "") | upper }}</td>
 	</tr>
 	<tr>
-		<td class="sm" colspan="7">
+		<td class="sm" colspan="8">
 			Declaration: {{ txt(s.declaration_text) or "We declare that this invoice show the actual price of goods described and that all particulars are true and correct." }}
 		</td>
 	</tr>
 	<tr>
-		<td class="sig" colspan="7">
+		<td class="sig" colspan="8">
 			<div style="text-align: right;">
 				{{ txt(company.company_name) }}
 				<div style="height: 45px;"></div>

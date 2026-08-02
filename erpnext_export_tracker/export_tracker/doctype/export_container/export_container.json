@@ -1,0 +1,133 @@
+{
+ "actions": [],
+ "creation": "2026-07-30 10:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "container_no",
+  "container_size",
+  "seal_no",
+  "no_of_packages",
+  "net_weight",
+  "gross_weight",
+  "vgm_section",
+  "max_permissible_weight",
+  "weighbridge",
+  "vgm_weight",
+  "column_break_vgm",
+  "weighing_datetime",
+  "weighing_slip_no",
+  "cargo_type",
+  "un_imdg_class"
+ ],
+ "fields": [
+  {
+   "columns": 3,
+   "fieldname": "container_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Container No",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "default": "40 FEET",
+   "fieldname": "container_size",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Size",
+   "options": "\n20 FEET\n40 FEET\n40 HC\nOther"
+  },
+  {
+   "columns": 2,
+   "fieldname": "seal_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Seal No"
+  },
+  {
+   "columns": 1,
+   "fieldname": "no_of_packages",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Packages"
+  },
+  {
+   "columns": 2,
+   "fieldname": "net_weight",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Net Wt (KGS)",
+   "precision": "3"
+  },
+  {
+   "fieldname": "gross_weight",
+   "fieldtype": "Float",
+   "label": "Gross Wt (KGS)",
+   "precision": "3"
+  },
+  {
+   "fieldname": "vgm_section",
+   "fieldtype": "Section Break",
+   "label": "Verified Gross Mass"
+  },
+  {
+   "default": "32500",
+   "fieldname": "max_permissible_weight",
+   "fieldtype": "Float",
+   "label": "Max Permissible Weight per CSC Plate (KGS)",
+   "precision": "2"
+  },
+  {
+   "fieldname": "weighbridge",
+   "fieldtype": "Data",
+   "label": "Weighbridge Registration No & Address"
+  },
+  {
+   "fieldname": "vgm_weight",
+   "fieldtype": "Float",
+   "label": "Verified Gross Mass (KGS)",
+   "precision": "3"
+  },
+  {
+   "fieldname": "column_break_vgm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "weighing_datetime",
+   "fieldtype": "Datetime",
+   "label": "Date and Time of Weighing"
+  },
+  {
+   "fieldname": "weighing_slip_no",
+   "fieldtype": "Data",
+   "label": "Weighing Slip No"
+  },
+  {
+   "default": "NORMAL",
+   "fieldname": "cargo_type",
+   "fieldtype": "Select",
+   "label": "Type",
+   "options": "NORMAL\nREEFER\nHAZARDOUS\nOTHERS"
+  },
+  {
+   "default": "NA",
+   "fieldname": "un_imdg_class",
+   "fieldtype": "Data",
+   "label": "If Hazardous: UN No / IMDG Class"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-30 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Export Tracker",
+ "name": "Export Container",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

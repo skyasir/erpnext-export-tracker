@@ -45,6 +45,9 @@ frappe.ui.form.on("Sales Invoice", {
 				custom_gross_weight: shipment.gross_weight,
 				custom_no_of_packages: shipment.no_of_packages,
 				custom_terms_of_payment: shipment.terms_of_payment,
+				custom_notify_name: shipment.notify_name,
+				custom_notify_address: shipment.notify_address,
+				custom_notify_email: shipment.notify_email,
 			};
 			Object.keys(map).forEach((field) => {
 				if (map[field]) frm.set_value(field, map[field]);

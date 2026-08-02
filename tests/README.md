@@ -14,6 +14,7 @@ cd <bench>/sites
 |---|---|
 | `uat_core.py` | auto-create on export SO submit, no-create for domestic, CHA comparison + selection gates, country-driven checklist, every stage gate, the EXP invoice series and charge build-up, the Export Invoice print content, payment → XAR → bank → EBRC chain, Export Indent approval sequence, all 10 print formats, all 6 reports, cancel protection, reminder job |
 | `test_section_visibility.py` | proves the progressive section-disclosure rules cannot deadlock the workflow: every field a gate demands sits in a section already visible at the stage the action is taken from |
+| `test_export_documents.py` | rebuilds a real 3-container shipment and checks the five documents we issue, their arithmetic, package numbering, and that no print format exists for the three third-party documents |
 | `uat_routes_and_hooks.py` | the LC route gates, the Through Bank document set, part-shipment, the Delivery Note hook, advance-against-order payment, Payment Entry / Sales Invoice cancel paths, the invoice→shipment fallback lookup, the remaining country templates, reports with rows actually in them, PDF generation |
 
 ## Before running: set the site constants
@@ -46,8 +47,11 @@ Run the cleanup afterwards:
 ../env/bin/python ../apps/erpnext_export_tracker/tests/cleanup_uat_data.py
 ```
 
-`cleanup_uat_data.py` works from an explicit **allow-list of the records to keep**
-— nothing is date-swept. Edit `KEEP_SO` / `KEEP_SI` / `KEEP_SE` / `KEEP_PE` and the
+`cleanup_uat_data.py` only deletes rows whose **`owner` is the test user**
+(`Administrator`) and works from an explicit **allow-list of records to keep** —
+nothing is date-swept. Real users try the app on the same site and their drafts
+are not residue. It also floors each naming series at the highest *surviving*
+document, so rewinding a counter can never collide with a record it kept. Edit `KEEP_SO` / `KEEP_SI` / `KEEP_SE` / `KEEP_PE` and the
 `BASELINE` naming-series values to match your site before running it, or it will
 delete documents you wanted. It also removes orphaned GL and Stock Ledger
 entries; because that last step uses raw SQL and bypasses the `Bin` cache, run

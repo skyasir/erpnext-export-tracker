@@ -19,6 +19,8 @@ KEEP_PE = {
 	"ACC-PAY-2026-00004", "ACC-PAY-2026-00005",
 }
 
+TEST_OWNER = "Administrator"   # the tests run as Administrator; nobody else's rows
+
 log = []
 
 
@@ -48,13 +50,26 @@ for name in frappe.get_all("Export Shipment", filters={"export_indent": ["is", "
 	frappe.db.set_value("Export Shipment", name, "export_indent", None, update_modified=False)
 
 # ---------------------------------------------------------------- documents
-scrub("Payment Entry", [n for n in frappe.get_all("Payment Entry", pluck="name") if n not in KEEP_PE])
-scrub("Sales Invoice", [n for n in frappe.get_all("Sales Invoice", pluck="name") if n not in KEEP_SI])
-scrub("Delivery Note", frappe.get_all("Delivery Note", pluck="name"))
-scrub("Stock Entry", [n for n in frappe.get_all("Stock Entry", pluck="name") if n not in KEEP_SE])
-scrub("Export Indent", frappe.get_all("Export Indent", pluck="name"))
-scrub("Export Shipment", frappe.get_all("Export Shipment", pluck="name"))
-scrub("Sales Order", [n for n in frappe.get_all("Sales Order", pluck="name") if n not in KEEP_SO])
+def mine(doctype, keep=()):
+	return [
+		r.name
+		for r in frappe.get_all(doctype, filters={"owner": TEST_OWNER}, fields=["name"])
+		if r.name not in keep
+	]
+
+
+scrub("Payment Entry", mine("Payment Entry", KEEP_PE))
+scrub("Sales Invoice", mine("Sales Invoice", KEEP_SI))
+scrub("Delivery Note", mine("Delivery Note"))
+scrub("Stock Entry", mine("Stock Entry", KEEP_SE))
+# Only ever remove records the tests themselves created. Real users try the app
+# on the same site, and their drafts are not residue -- checking `owner` is the
+# difference between cleaning up and destroying someone's work.
+scrub("Export Indent",
+      frappe.get_all("Export Indent", filters={"owner": TEST_OWNER}, pluck="name"))
+scrub("Export Shipment",
+      frappe.get_all("Export Shipment", filters={"owner": TEST_OWNER}, pluck="name"))
+scrub("Sales Order", mine("Sales Order", KEEP_SO))
 
 # ---------------------------------------------------------------- orphan ledgers
 for table, field in (("GL Entry", "voucher_no"), ("Stock Ledger Entry", "voucher_no")):
@@ -70,6 +85,16 @@ for table, field in (("GL Entry", "voucher_no"), ("Stock Ledger Entry", "voucher
 			log.append("deleted orphan %-12s %s (%s)" % (table, r.name, r.vno))
 
 # ---------------------------------------------------------------- naming series
+SERIES_DOCTYPE = {
+	"SAL-ORD-2026-": "Sales Order",
+	"DN-26-": "Delivery Note",
+	"MAT-STE-": "Stock Entry",
+	"ACC-PAY-2026-": "Payment Entry",
+	"EXP/": "Sales Invoice",
+	"EXP-SHP-2026-": "Export Shipment",
+	"EXP-IND-2026-": "Export Indent",
+}
+
 BASELINE = {
 	"SAL-ORD-2026-": 4,
 	"DN-26-": 0,
@@ -79,12 +104,30 @@ BASELINE = {
 	"EXP-SHP-2026-": 0,
 	"EXP-IND-2026-": 0,
 }
+def highest_existing(prefix, doctype):
+	"""Never rewind a counter below a document that still exists -- a survivor at
+	00001 plus a counter at 0 means the next insert collides on the name."""
+	rows = frappe.db.sql(
+		"select name from `tab{0}` where name like %s".format(doctype), prefix + "%"
+	)
+	best = 0
+	for (name,) in rows:
+		tail = name[len(prefix):]
+		if tail.isdigit():
+			best = max(best, int(tail))
+	return best
+
+
 for prefix, value in BASELINE.items():
 	# tabSeries has no `modified` column, so the ORM helpers cannot read it
 	row = frappe.db.sql("select current from tabSeries where name = %s", prefix)
-	if row:
-		frappe.db.sql("update tabSeries set current = %s where name = %s", (value, prefix))
-		log.append("series   %-16s %s -> %s" % (prefix, row[0][0], value))
+	if not row:
+		continue
+	doctype = SERIES_DOCTYPE.get(prefix)
+	if doctype:
+		value = max(value, highest_existing(prefix, doctype))
+	frappe.db.sql("update tabSeries set current = %s where name = %s", (value, prefix))
+	log.append("series   %-16s %s -> %s" % (prefix, row[0][0], value))
 
 frappe.db.commit()
 

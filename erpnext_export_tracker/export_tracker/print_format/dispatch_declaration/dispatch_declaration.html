@@ -36,7 +36,7 @@
 		<tr><td class="k">Invoice No. &amp; Date</td>
 			<td>{{ doc.sales_invoice or "-" }}{% if si %} dated {{ frappe.utils.formatdate(si.posting_date, "dd.MM.yyyy") }}{% endif %}</td></tr>
 		<tr><td class="k">Invoice Value</td>
-			<td>{{ frappe.utils.fmt_money(si.grand_total if si else doc.invoice_amount, currency=(si.currency if si else doc.currency)) }}</td></tr>
+			<td>{{ frappe.utils.fmt_money(si.grand_total if si else doc.invoice_amount, currency=(si.currency if si else doc.currency), format="#,###.##") }}</td></tr>
 		<tr><td class="k">Consignee</td><td>{{ txt(doc.consignee_name) or "-" }}</td></tr>
 		<tr><td class="k">Country of Final Destination</td><td>{{ doc.country_of_final_destination or "-" }}</td></tr>
 		<tr><td class="k">Shipping Bill No. &amp; Date</td>

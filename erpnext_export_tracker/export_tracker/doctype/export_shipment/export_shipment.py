@@ -31,6 +31,8 @@ class ExportShipment(Document):
 		self.set_defaults_from_order()
 		self.set_defaults_from_settings()
 		self.sync_cha_quotes()
+		self.sync_containers()
+		self.number_packages()
 		self.update_payment_status()
 		self.stamp_management_signature()
 		self.stage_index = self.state_index()
@@ -126,6 +128,46 @@ class ExportShipment(Document):
 			self.selected_freight_amount = 0
 			self.selected_transit_days = 0
 			self.selected_free_days = 0
+
+	# ------------------------------------------------------------------
+	# containers and packing -- one source of truth for four documents
+	# ------------------------------------------------------------------
+	def sync_containers(self):
+		"""The containers table is authoritative once it has rows; the older
+		single container_no field and the weight totals become derived from it,
+		so the invoice print and the loading gate keep working unchanged."""
+		if not self.containers:
+			return
+
+		self.container_no = "\n".join(c.container_no for c in self.containers if c.container_no)
+		self.no_of_containers = len(self.containers)
+		self.net_weight = sum(flt(c.net_weight) for c in self.containers)
+		self.gross_weight = sum(flt(c.gross_weight) for c in self.containers)
+		self.no_of_packages = sum(int(c.no_of_packages or 0) for c in self.containers)
+
+		known = {c.container_no for c in self.containers if c.container_no}
+		for row in self.packing_items:
+			if row.container_no and row.container_no not in known:
+				frappe.throw(
+					_("Packing row {0} names container {1}, which is not in the Containers "
+					  "table.").format(row.idx, row.container_no)
+				)
+
+	def number_packages(self):
+		"""Package numbers run consecutively across the whole packing list, in
+		row order -- 1 TO 4, then 5 TO 129, and so on."""
+		counter = 0
+		for row in self.packing_items:
+			row.total_qty = flt(row.qty_per_bundle) * (row.no_of_packages or 0)
+			row.total_weight = flt(row.weight_per_package) * (row.no_of_packages or 0)
+			count = int(row.no_of_packages or 0)
+			if count > 0:
+				row.package_from = counter + 1
+				row.package_to = counter + count
+				counter += count
+			else:
+				row.package_from = None
+				row.package_to = None
 
 	# ------------------------------------------------------------------
 	# payment -- drives the bank closure gate

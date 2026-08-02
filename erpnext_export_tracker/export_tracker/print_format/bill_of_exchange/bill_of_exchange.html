@@ -29,7 +29,7 @@
 	</div>
 
 	<div class="row">
-		<span class="lft amt">Exchange for {{ frappe.utils.fmt_money(amount, currency=cur) }}</span>
+		<span class="lft amt">Exchange for {{ frappe.utils.fmt_money(amount, currency=cur, format="#,###.##") }}</span>
 		<span class="rgt">Bill of Exchange No.: {{ doc.name }}</span>
 	</div>
 

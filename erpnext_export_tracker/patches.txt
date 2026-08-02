@@ -3,3 +3,4 @@
 [post_model_sync]
 erpnext_export_tracker.patches.setup_export_defaults
 erpnext_export_tracker.patches.backfill_stage_index
+erpnext_export_tracker.patches.add_notify_party_fields

@@ -1,0 +1,99 @@
+{
+ "actions": [],
+ "creation": "2026-07-30 10:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "container_no",
+  "description",
+  "qty_per_bundle",
+  "no_of_packages",
+  "total_qty",
+  "weight_per_package",
+  "total_weight",
+  "package_from",
+  "package_to"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "container_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Container No"
+  },
+  {
+   "columns": 3,
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Description of Goods",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "qty_per_bundle",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty / Bundle"
+  },
+  {
+   "columns": 1,
+   "fieldname": "no_of_packages",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "No of Pkgs"
+  },
+  {
+   "columns": 1,
+   "fieldname": "total_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Qty",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "weight_per_package",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Wt / Pkg",
+   "precision": "3"
+  },
+  {
+   "columns": 1,
+   "fieldname": "total_weight",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Wt",
+   "precision": "3",
+   "read_only": 1
+  },
+  {
+   "description": "Numbered automatically, running across the whole list",
+   "fieldname": "package_from",
+   "fieldtype": "Int",
+   "label": "Package No From",
+   "read_only": 1
+  },
+  {
+   "fieldname": "package_to",
+   "fieldtype": "Int",
+   "label": "Package No To",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-30 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Export Tracker",
+ "name": "Export Packing Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

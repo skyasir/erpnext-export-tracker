@@ -35,7 +35,7 @@
 		<tr><td class="k">Invoice No. &amp; Date</td>
 			<td>{{ doc.sales_invoice or "-" }}{% if si %} dated {{ frappe.utils.formatdate(si.posting_date, "dd.MM.yyyy") }}{% endif %}</td></tr>
 		<tr><td class="k">Sum to be Insured</td>
-			<td>{{ frappe.utils.fmt_money(si.grand_total if si else doc.invoice_amount, currency=cur) }}</td></tr>
+			<td>{{ frappe.utils.fmt_money(si.grand_total if si else doc.invoice_amount, currency=cur, format="#,###.##") }}</td></tr>
 		<tr><td class="k">Description of Goods</td>
 			<td>{{ (si.custom_goods_description if si else "") or s.goods_description or "-" }}</td></tr>
 		<tr><td class="k">No. of Packages</td><td>{{ doc.no_of_packages or "-" }}</td></tr>

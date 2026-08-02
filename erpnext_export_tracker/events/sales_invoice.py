@@ -42,6 +42,9 @@ def on_submit(doc, method=None):
 		("custom_gross_weight", "gross_weight"),
 		("custom_no_of_packages", "no_of_packages"),
 		("custom_terms_of_payment", "terms_of_payment"),
+		("custom_notify_name", "notify_name"),
+		("custom_notify_address", "notify_address"),
+		("custom_notify_email", "notify_email"),
 	):
 		value = doc.get(source)
 		if value and not shipment.get(target):

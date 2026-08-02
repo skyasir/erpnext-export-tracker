@@ -462,13 +462,26 @@ Nigeria, SGS for Uganda, and so on).
 | Print format | Covers |
 |---|---|
 | SCOMET Letter | the SCOMET declaration |
+| Verified Gross Mass | one VGM form per container, from the Containers table |
 | Export Value Declaration | value build-up + the standard declarations |
 | Letter of Undertaking | the customs undertaking |
 | Insurance Declaration | the request to your marine insurer |
 
-Certificates issued by third parties — SONCAP, SGS, the examination report,
-Form 13 — are attachments; the app tracks who owes them and whether they have
-arrived, using the **Responsibility** column.
+**Documents issued by someone else are never generated here** — the Certificate
+of Origin (FIEO/MACCIA portal), the Bill of Lading (your forwarder), the marine
+insurance policy (the insurer), SONCAP, SGS, the examination report and Form 13.
+The app tracks who owes each one, whether it has arrived, and holds the file on
+the checklist row via **Responsibility** and **Attachment**.
+
+Before Container Loaded, fill the **Containers** table — one row per container
+with its seal, packages, net and gross weight, plus the weighbridge details. That
+one table drives the VGM form, the container rows on the invoice, and the packing
+list's grouping and per-container totals. Then fill **Packing Details**: one row
+per part per container. Package numbers (1 TO 4, 5 TO 129, …) are assigned
+automatically, running consecutively across the whole list.
+
+> Export documents print with **international digit grouping** (185,079.90), not
+> the site's Indian lakh format (1,85,079.90), because they are read abroad.
 
 ### Step 8.4 — Insurance, if applicable
 **Where:** Export Shipment → *Insurance*

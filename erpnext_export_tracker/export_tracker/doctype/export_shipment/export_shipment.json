@@ -25,6 +25,10 @@
   "consignee_name",
   "consignee_address",
   "consignee_email",
+  "column_break_notify",
+  "notify_name",
+  "notify_address",
+  "notify_email",
   "column_break_parties",
   "buyer_same_as_consignee",
   "buyer_name",
@@ -74,6 +78,10 @@
   "no_of_packages",
   "vgm_submitted",
   "form_13_received",
+  "containers_section",
+  "containers",
+  "packing_section",
+  "packing_items",
   "pre_shipment_section",
   "document_template",
   "pre_shipment_documents",
@@ -285,6 +293,26 @@
    "fieldname": "consignee_email",
    "fieldtype": "Data",
    "label": "Consignee Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "column_break_notify",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "notify_name",
+   "fieldtype": "Data",
+   "label": "Notify Party"
+  },
+  {
+   "fieldname": "notify_address",
+   "fieldtype": "Small Text",
+   "label": "Notify Address"
+  },
+  {
+   "fieldname": "notify_email",
+   "fieldtype": "Data",
+   "label": "Notify Email",
    "options": "Email"
   },
   {
@@ -551,6 +579,32 @@
    "fieldname": "form_13_received",
    "fieldtype": "Check",
    "label": "Form 13 Received from CHA"
+  },
+  {
+   "depends_on": "eval:doc.stage_index >= 2",
+   "description": "One row per container -- feeds the VGM, the invoice and the packing list",
+   "fieldname": "containers_section",
+   "fieldtype": "Section Break",
+   "label": "Containers"
+  },
+  {
+   "fieldname": "containers",
+   "fieldtype": "Table",
+   "label": "Containers",
+   "options": "Export Container"
+  },
+  {
+   "depends_on": "eval:doc.stage_index >= 2",
+   "description": "Detail lines for the packing list, grouped by container",
+   "fieldname": "packing_section",
+   "fieldtype": "Section Break",
+   "label": "Packing Details"
+  },
+  {
+   "fieldname": "packing_items",
+   "fieldtype": "Table",
+   "label": "Packing Items",
+   "options": "Export Packing Item"
   },
   {
    "depends_on": "eval:doc.stage_index >= 1",

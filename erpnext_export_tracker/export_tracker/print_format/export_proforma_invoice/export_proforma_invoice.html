@@ -113,26 +113,26 @@
 		</td>
 		<td class="ctr">{{ "%g" | format(item.qty or 0) }}</td>
 		<td class="ctr">{{ (item.uom or "") | upper }}</td>
-		<td class="rt">{{ frappe.utils.fmt_money(item.rate, currency=cur) }}</td>
-		<td class="rt">{{ frappe.utils.fmt_money(item.amount, currency=cur) }}</td>
+		<td class="rt">{{ frappe.utils.fmt_money(item.rate, currency=cur, format="#,###.##") }}</td>
+		<td class="rt">{{ frappe.utils.fmt_money(item.amount, currency=cur, format="#,###.##") }}</td>
 	</tr>
 	{% endfor %}
 
 	<tr>
 		<td class="tot" colspan="5">TOTAL EX-WORKS AMOUNT</td>
-		<td class="rt b">{{ frappe.utils.fmt_money(doc.net_total, currency=cur) }}</td>
+		<td class="rt b">{{ frappe.utils.fmt_money(doc.net_total, currency=cur, format="#,###.##") }}</td>
 	</tr>
 	{% for tax in doc.taxes %}
 	<tr>
 		<td class="tot" colspan="5">
 			{% if tax.tax_amount and tax.tax_amount > 0 %}(+) {% endif %}{{ txt(tax.description) | upper }}
 		</td>
-		<td class="rt">{{ frappe.utils.fmt_money(tax.tax_amount, currency=cur) }}</td>
+		<td class="rt">{{ frappe.utils.fmt_money(tax.tax_amount, currency=cur, format="#,###.##") }}</td>
 	</tr>
 	{% endfor %}
 	<tr>
 		<td class="tot" colspan="5">TOTAL {{ (doc.incoterm or "") | upper }} AMOUNT</td>
-		<td class="rt b">{{ frappe.utils.fmt_money(doc.grand_total, currency=cur) }}</td>
+		<td class="rt b">{{ frappe.utils.fmt_money(doc.grand_total, currency=cur, format="#,###.##") }}</td>
 	</tr>
 	<tr>
 		<td class="b ctr" colspan="6">TOTAL AMOUNT IN WORDS: {{ (doc.in_words or "") | upper }}</td>

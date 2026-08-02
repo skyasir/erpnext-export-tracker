@@ -13,6 +13,11 @@
   "exporter_tel",
   "exporter_email",
   "authorised_signatory",
+  "declaration_signatory",
+  "declaration_designation",
+  "declaration_contact",
+  "default_weighbridge",
+  "customs_office",
   "goods_description",
   "declaration_text",
   "banker_section",
@@ -88,7 +93,34 @@
   {
    "fieldname": "authorised_signatory",
    "fieldtype": "Data",
-   "label": "Authorised Signatory"
+   "label": "Authorised Signatory (invoice)"
+  },
+  {
+   "description": "Signs the VGM, SCOMET letter and value declaration",
+   "fieldname": "declaration_signatory",
+   "fieldtype": "Data",
+   "label": "Declaration Signatory"
+  },
+  {
+   "fieldname": "declaration_designation",
+   "fieldtype": "Data",
+   "label": "Declaration Signatory Designation"
+  },
+  {
+   "fieldname": "declaration_contact",
+   "fieldtype": "Data",
+   "label": "24x7 Contact of Authorised Official"
+  },
+  {
+   "fieldname": "default_weighbridge",
+   "fieldtype": "Data",
+   "label": "Default Weighbridge"
+  },
+  {
+   "default": "The Deputy Commissioner of Customs,\nExports Department",
+   "fieldname": "customs_office",
+   "fieldtype": "Small Text",
+   "label": "Customs Office Address"
   },
   {
    "description": "Heading printed above the item rows, e.g. Poultry Keeping Equipments & parts in ckd condition",

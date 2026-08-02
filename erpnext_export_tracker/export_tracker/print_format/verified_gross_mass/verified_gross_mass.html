@@ -1,0 +1,88 @@
+{%- set s = frappe.get_doc("Export Tracker Settings") -%}
+{%- set company = frappe.get_doc("Company", doc.company) -%}
+{%- macro txt(v) -%}{{ (v or "") | replace("&", "&amp;") }}{%- endmacro -%}
+
+<style>
+	.vgm { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #000; }
+	.vgm h2 { text-align: center; font-size: 12.5pt; font-weight: bold;
+	          text-decoration: underline; margin: 0 0 18px; }
+	.vgm table { width: 100%; border-collapse: collapse; }
+	.vgm td, .vgm th { border: 1px solid #000; padding: 4px 6px; vertical-align: top;
+	                   font-size: 9.5pt; }
+	.vgm th { text-align: center; font-weight: bold; font-size: 11pt; }
+	.vgm .sr { text-align: center; width: 8%; }
+	.vgm .det { width: 47%; }
+	.vgm .sign { margin-top: 14px; text-align: right; font-weight: bold; }
+	.vgm .rem { margin-top: 20px; font-size: 9pt; }
+	.vgm .rem b { text-decoration: underline; }
+	.vgm .cn { letter-spacing: 2px; font-weight: bold; }
+	.vgm .page { page-break-after: always; }
+	.vgm .page:last-child { page-break-after: auto; }
+</style>
+
+<div class="vgm">
+{% for c in doc.containers %}
+<div class="page">
+	<h2>INFORMATION ABOUT VERIFIED GROSS MASS OF CONTAINER</h2>
+
+	<table>
+		<tr>
+			<th class="sr">Sr. No.</th>
+			<th class="det">Details of information</th>
+			<th>Particulars</th>
+		</tr>
+		<tr><td class="sr">1*</td><td>Name of the shipper</td>
+			<td>{{ txt(company.company_name) | upper }}</td></tr>
+		<tr><td class="sr">2*</td>
+			<td>Shipper Registration /License no. (IEC No/CIN No) **</td>
+			<td>{{ s.iec_code or "" }}</td></tr>
+		<tr><td class="sr">3*</td>
+			<td>Name and designation of official of the shipper authorized to sign document</td>
+			<td>{{ txt(s.declaration_signatory) }}{% if s.declaration_designation %}<br>{{ txt(s.declaration_designation) }}{% endif %}</td></tr>
+		<tr><td class="sr">4*</td>
+			<td>24 x 7 contact details of authorized official of shipper</td>
+			<td>{{ s.declaration_contact or "" }}</td></tr>
+		<tr><td class="sr">5*</td><td>Container No.</td>
+			<td class="cn">{{ c.container_no or "" }}</td></tr>
+		<tr><td class="sr">6*</td><td>Container Size (TEU/FEU/other)</td>
+			<td>{{ c.container_size or "" }}</td></tr>
+		<tr><td class="sr">7*</td>
+			<td>Maximum permissible weight of container as per the CSC plate</td>
+			<td>{{ "%.2f" | format(c.max_permissible_weight or 0) }} KGS</td></tr>
+		<tr><td class="sr">8*</td>
+			<td>Weighbridge registration no. &amp; Address of Weighbridge</td>
+			<td>{{ txt(c.weighbridge or s.default_weighbridge) }}</td></tr>
+		<tr><td class="sr">9*</td>
+			<td>Verified gross mass of container (method-1/method-2)</td>
+			<td>{{ "%.3f" | format(c.vgm_weight or c.gross_weight or 0) }} KGS</td></tr>
+		<tr><td class="sr">10*</td><td>Date and time of weighing</td>
+			<td>{% if c.weighing_datetime %}{{ frappe.utils.formatdate(c.weighing_datetime, "dd.MM.yyyy") }} @ {{ frappe.utils.format_datetime(c.weighing_datetime, "HH:mm") }}{% endif %}</td></tr>
+		<tr><td class="sr">11*</td><td>Weighing slip no.</td>
+			<td>{{ c.weighing_slip_no or "" }}</td></tr>
+		<tr><td class="sr">12*</td><td>Type (Normal/Reefer/Hazardous/others)</td>
+			<td>{{ c.cargo_type or "" }}</td></tr>
+		<tr><td class="sr">13*</td><td>If Hazardous UN NO. IMDG class</td>
+			<td>{{ c.un_imdg_class or "NA" }}</td></tr>
+	</table>
+
+	<div class="sign">
+		Signature of Authorized Person of Shipper
+		<div style="height: 46px;"></div>
+		Name: {{ txt(s.declaration_signatory) | upper }}<br>
+		Date: {% if c.weighing_datetime %}{{ frappe.utils.formatdate(c.weighing_datetime, "dd.MM.yyyy") }}{% else %}{{ frappe.utils.formatdate(doc.loading_date, "dd.MM.yyyy") if doc.loading_date else "" }}{% endif %}
+	</div>
+
+	<div class="rem">
+		<b>Remarks:</b><br>
+		*Indicates mandatory fields<br>
+		**Shippers not having IEC no. CIN No. may provide information as follows:<br>
+		Company - PAN No.<br>
+		Individuals<br>
+		Indian National - AADHAR No.<br>
+		Foreign National - PASSPORT No. &amp; Country of issue of Passport.
+	</div>
+</div>
+{% else %}
+<p><i>No containers entered on this shipment yet — add rows to the Containers table.</i></p>
+{% endfor %}
+</div>
