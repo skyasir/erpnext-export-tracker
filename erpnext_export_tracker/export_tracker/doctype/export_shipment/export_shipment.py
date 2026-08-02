@@ -27,6 +27,18 @@ ROUTE_LC = "Through Letter of Credit"
 
 
 class ExportShipment(Document):
+	def onload(self):
+		"""Recompute the stage index when the form is opened.
+
+		Section visibility keys off stage_index, so a stored value that has drifted
+		from status -- stale worker code, a direct db_set, a restored row -- would
+		hide the very section a gate is telling the user to fill, with no way out.
+		This is display-only; validate() persists the correct value on the next save.
+		"""
+		current = self.state_index()
+		if self.stage_index != current:
+			self.stage_index = current
+
 	def validate(self):
 		self.set_defaults_from_order()
 		self.set_defaults_from_settings()
