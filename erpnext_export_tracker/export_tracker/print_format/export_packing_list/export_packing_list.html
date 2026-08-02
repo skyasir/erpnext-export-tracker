@@ -1,121 +1,158 @@
 {%- set s = frappe.get_doc("Export Tracker Settings") -%}
 {%- set company = frappe.get_doc("Company", doc.company) -%}
+{%- set si = frappe.get_doc("Sales Invoice", doc.sales_invoice) if doc.sales_invoice else None -%}
 {%- macro txt(v) -%}{{ (v or "") | replace("&", "&amp;") }}{%- endmacro -%}
 {%- macro blk(v) -%}{{ (v or "") | replace("&", "&amp;") | replace("\n", "<br>") }}{%- endmacro -%}
+{%- set goods = (si.custom_goods_description if si else "") or s.goods_description or "" -%}
+{%- set hsn = [] -%}
+{%- if si -%}{%- for it in si.items -%}
+	{%- if it.gst_hsn_code and it.gst_hsn_code not in hsn -%}{%- set _ = hsn.append(it.gst_hsn_code) -%}{%- endif -%}
+{%- endfor -%}{%- endif -%}
 
 <style>
 	.pl { width: 100%; border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;
-	      font-size: 8.5pt; color: #000; table-layout: fixed; }
-	.pl td, .pl th { border: 1px solid #000; padding: 2px 4px; vertical-align: top;
-	                 word-wrap: break-word; }
+	      font-size: 7.5pt; color: #000; table-layout: fixed; }
+	.pl td { border: 1px solid #000; padding: 2px 3px; vertical-align: top; word-wrap: break-word; }
 	.pl .t { text-align: center; font-size: 13pt; font-weight: bold; }
-	.pl .lbl { text-align: center; font-weight: bold; font-size: 7.5pt; }
+	.pl .lbl { text-align: center; font-weight: bold; font-size: 7pt; }
 	.pl .ctr { text-align: center; }
 	.pl .b { font-weight: bold; }
 	.pl .grp { text-align: center; font-weight: bold; text-decoration: underline; }
-	.pl .sig { height: 60px; vertical-align: bottom; }
+	.pl .sml { font-size: 7pt; }
 </style>
 
 <table class="pl">
-	<tr><td class="t" colspan="6">PACKING LIST</td></tr>
+	<tr><td class="t" colspan="9">PACKING LIST</td></tr>
 
 	<tr>
-		<td class="b" colspan="3">EXPORTER:</td>
-		<td colspan="3">
-			<span class="b">Invoice No. &amp; Date: {{ doc.name }}
-			&nbsp;&nbsp; Date: {{ frappe.utils.formatdate(doc.posting_date, "dd.MM.yyyy") }}</span>
-		</td>
+		<td colspan="4" class="b">EXPORTER:</td>
+		<td colspan="3" class="ctr b">Invoice No.- {{ doc.sales_invoice or "" }}</td>
+		<td colspan="2" class="ctr b">DATE - {{ frappe.utils.formatdate(si.posting_date, "dd.MM.yyyy") if si else "" }}</td>
 	</tr>
 	<tr>
-		<td colspan="3">
+		<td colspan="4" rowspan="3">
 			<span class="b">{{ txt(company.company_name) | upper }}</span><br>
-			{% if s.exporter_address %}{{ blk(s.exporter_address) }}
-			{% elif doc.company_address_display %}{{ doc.company_address_display }}{% endif %}
+			{{ blk(s.exporter_address) }}
+			{% if si and si.company_gstin %}<br>GSTIN/UIN: {{ si.company_gstin }}{% endif %}
+			{% if s.exporter_tel %}<br>Ph: {{ s.exporter_tel }}{% endif %}
 		</td>
-		<td colspan="3">
-			IEC Code: {{ s.iec_code or "" }}<br>
-			GSTIN/UIN: {{ doc.company_gstin or "" }}<br>
-			PAN No.: {{ s.pan_no or "" }}
+		<td colspan="5" class="ctr b">IEC CODE - {{ s.iec_code or "" }}</td>
+	</tr>
+	<tr><td colspan="5" class="ctr b">SHIPMENT TERM - {{ txt(doc.incoterm) }}</td></tr>
+	<tr><td colspan="5" class="ctr b">VESSEL /FLIGHT NO. - {{ txt(doc.vessel_flight_no) }}</td></tr>
+
+	<tr>
+		<td colspan="4" class="b">NOTIFY :</td>
+		<td colspan="2" class="lbl">COUNTRY OF ORIGIN</td>
+		<td colspan="3" class="lbl">COUNTRY OF MANUFACTURING &amp; SUPPLY</td>
+	</tr>
+	<tr>
+		<td colspan="4" rowspan="2">
+			<span class="b">{{ txt(doc.notify_name) }}</span><br>
+			{{ blk(doc.notify_address) }}
+			{% if doc.notify_email %}<br>EMAIL: {{ doc.notify_email }}{% endif %}
 		</td>
+		<td colspan="2" class="ctr">{{ txt(doc.country_of_origin) }}</td>
+		<td colspan="3" class="ctr">{{ txt(doc.country_of_origin) }}</td>
+	</tr>
+	<tr>
+		<td colspan="2" class="lbl">FINAL DESTINATION</td>
+		<td colspan="3" class="lbl">COUNTRY OF FINAL DESTINATION</td>
 	</tr>
 
 	<tr>
-		<td class="b" colspan="3">CONSIGNEE:</td>
-		<td class="b" colspan="3">BUYER:</td>
+		<td colspan="4" class="b">CONSIGNEE :</td>
+		<td colspan="2" class="ctr">{{ txt(doc.final_destination) }}</td>
+		<td colspan="3" class="ctr">{{ txt(doc.country_of_final_destination) }}</td>
 	</tr>
 	<tr>
-		<td colspan="3">
-			<span class="b">{{ txt(doc.custom_consignee_name or doc.customer_name) }}</span><br>
-			{{ blk(doc.custom_consignee_address or doc.address_display) }}
+		<td colspan="4">
+			<span class="b">{{ txt(doc.consignee_name) }}</span><br>
+			{{ blk(doc.consignee_address) }}
 		</td>
-		<td colspan="3">
-			<span class="b">{{ txt(doc.custom_buyer_name or doc.custom_consignee_name or doc.customer_name) }}</span><br>
-			{{ blk(doc.custom_buyer_address or doc.custom_consignee_address) }}
-		</td>
+		<td colspan="5"></td>
 	</tr>
 
 	<tr>
-		<td class="lbl">PORT OF LOADING</td>
-		<td class="lbl" colspan="2">PORT OF DISCHARGE</td>
-		<td class="lbl">FINAL DESTINATION</td>
-		<td class="lbl" colspan="2">CONTAINER NO.</td>
+		<td colspan="3" class="lbl">PORT OF LOADING</td>
+		<td colspan="3" class="lbl">MARKS &amp; NOS</td>
+		<td colspan="3" class="lbl">PORT OF DISCHARGE</td>
 	</tr>
 	<tr>
-		<td class="ctr">{{ doc.custom_port_of_loading or "" }}</td>
-		<td class="ctr" colspan="2">{{ doc.custom_port_of_discharge or "" }}</td>
-		<td class="ctr">{{ doc.custom_final_destination or "" }}</td>
-		<td class="ctr" colspan="2">{{ doc.custom_container_no or "" }}</td>
+		<td colspan="3" class="ctr">{{ txt(doc.port_of_loading) }}</td>
+		<td colspan="3" class="ctr">{{ txt(doc.consignee_name) }}</td>
+		<td colspan="3" class="ctr">{{ txt(doc.port_of_discharge) }}</td>
+	</tr>
+
+	<!-- detail -->
+	<tr>
+		<td class="lbl" style="width: 6%;">SR NO</td>
+		<td class="lbl" style="width: 28%;">DESCRIPTION OF GOODS</td>
+		<td class="lbl" style="width: 9%;">QTY / BUNDLE</td>
+		<td class="lbl" style="width: 8%;">NO OF PACKAGE</td>
+		<td class="lbl" style="width: 9%;">TOTAL QTY</td>
+		<td class="lbl" style="width: 9%;">WT/ PKGS</td>
+		<td class="lbl" style="width: 10%;">TOTAL WEIGHT</td>
+		<td class="lbl" colspan="2" style="width: 21%;">PACKAGE NO</td>
 	</tr>
 
 	<tr>
-		<td class="lbl" style="width: 8%;">ITEM NO.</td>
-		<td class="lbl" style="width: 42%;">DESCRIPTION OF GOODS</td>
-		<td class="lbl" style="width: 12%;">TOTAL QUANTITY</td>
-		<td class="lbl" style="width: 8%;">UOM</td>
-		<td class="lbl" style="width: 15%;">NET WEIGHT (KGS)</td>
-		<td class="lbl" style="width: 15%;">GROSS WEIGHT (KGS)</td>
-	</tr>
-
-	<tr>
-		<td class="grp" colspan="6">
-			{{ txt(doc.custom_goods_description or s.goods_description) }}
+		<td class="grp" colspan="9">
+			{{ txt(goods) }}{% if hsn %} - {{ hsn | join(", ") }}{% endif %}
 		</td>
 	</tr>
 
-	{% for item in doc.items %}
-	<tr>
-		<td class="ctr">{{ loop.index }}</td>
-		<td>
-			{{ txt(item.item_name) | upper }}
-			{% set extra = (item.description or "") | striptags | trim %}
-			{% if extra and extra | lower != (item.item_name or "") | lower %}
-				<br><span style="font-size: 7.5pt;">{{ txt(extra) }}</span>
-			{% endif %}
-		</td>
-		<td class="ctr">{{ "%g" | format(item.qty or 0) }}</td>
-		<td class="ctr">{{ (item.uom or "") | upper }}</td>
-		<td class="ctr">{{ "%g" | format(item.total_weight or 0) }}</td>
-		<td class="ctr">&nbsp;</td>
-	</tr>
+	{% set ns = namespace(sr=0) %}
+	{% for c in doc.containers %}
+		<tr><td class="grp" colspan="9">CONTAINER NO : {{ c.container_no }}</td></tr>
+		{% for r in doc.packing_items if r.container_no == c.container_no %}
+			{% set ns.sr = ns.sr + 1 %}
+			<tr>
+				<td class="ctr">{{ ns.sr }}</td>
+				<td>{{ txt(r.description) | upper }}</td>
+				<td class="ctr">{{ "%g" | format(r.qty_per_bundle or 0) }}</td>
+				<td class="ctr">{{ r.no_of_packages or 0 }}</td>
+				<td class="ctr">{{ "%g" | format(r.total_qty or 0) }}</td>
+				<td class="ctr">{{ "%g" | format(r.weight_per_package or 0) }}</td>
+				<td class="ctr">{{ "%g" | format(r.total_weight or 0) }}</td>
+				<td class="ctr">{{ r.package_from or "" }}</td>
+				<td class="ctr">TO {{ r.package_to or "" }}</td>
+			</tr>
+		{% endfor %}
 	{% endfor %}
 
 	<tr>
-		<td class="b" colspan="6">TOTAL NET WEIGHT: {{ "%.3f" | format(doc.custom_net_weight or 0) }} KGS</td>
+		<td class="b ctr" colspan="3">TOTAL PACKAGES</td>
+		<td class="b ctr">{{ doc.no_of_packages or 0 }}</td>
+		<td class="b ctr" colspan="2">Total Net Weight (in Kgs)</td>
+		<td class="b ctr" colspan="3">{{ "%.3f" | format(doc.net_weight or 0) }}</td>
 	</tr>
+
+	<tr><td class="b" colspan="9">TOTAL NET WEIGHT : {{ "%.3f" | format(doc.net_weight or 0) }} KGS</td></tr>
+	<tr><td class="b" colspan="9">TOTAL GROSS WEIGHT : {{ "%.3f" | format(doc.gross_weight or 0) }} KGS</td></tr>
+	<tr><td class="b" colspan="9">TOTAL PACKAGES : {{ doc.no_of_packages or 0 }} PACKAGES</td></tr>
+
+	<!-- per-container summary, two across -->
+	{% for c in doc.containers %}
+		{% if loop.index0 % 2 == 0 %}<tr>{% endif %}
+		<td colspan="4" style="border: 1px solid #000;">
+			<span class="b">{{ c.container_no }}{% if c.container_size %} - {{ c.container_size }}{% endif %}</span><br>
+			TOTAL NET WEIGHT : {{ "%.3f" | format(c.net_weight or 0) }} KGS<br>
+			TOTAL GROSS WEIGHT : {{ "%.3f" | format(c.gross_weight or 0) }} KGS<br>
+			TOTAL NO. OF PACKAGES : {{ c.no_of_packages or 0 }} PACKAGES
+		</td>
+		{% if loop.index0 % 2 == 0 and loop.last %}<td colspan="5"></td>{% endif %}
+		{% if loop.index0 % 2 == 1 %}<td></td></tr>{% elif loop.last %}</tr>{% endif %}
+	{% endfor %}
+
 	<tr>
-		<td class="b" colspan="6">TOTAL GROSS WEIGHT: {{ "%.3f" | format(doc.custom_gross_weight or 0) }} KGS</td>
-	</tr>
-	<tr>
-		<td class="b" colspan="6">TOTAL NO. OF PACKAGES: {{ doc.custom_no_of_packages or 0 }} PACKAGES</td>
-	</tr>
-	<tr>
-		<td class="sig" colspan="6">
-			<div style="text-align: right;">
-				<span class="b">{{ txt(company.company_name) }}</span>
-				<div style="height: 45px;"></div>
-				{% if s.authorised_signatory %}<u>{{ s.authorised_signatory | upper }}</u><br>{% endif %}
-				<u>Authorised Signature</u>
-			</div>
+		<td colspan="5" class="sml">
+			Declaration : {{ txt(s.declaration_text) or "We declare that this invoice show the actual price of goods describe &amp; that all particulars are true &amp; correct." }}
+		</td>
+		<td colspan="4" style="height: 70px; vertical-align: top; text-align: right;">
+			<span class="b">{{ txt(company.company_name) }}</span>
+			<div style="height: 40px;"></div>
+			<span class="b">{{ txt(s.declaration_signatory) | upper }}</span>
 		</td>
 	</tr>
 </table>

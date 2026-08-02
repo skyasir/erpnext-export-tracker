@@ -99,6 +99,28 @@ def get_custom_fields():
 			"module": MODULE,
 		},
 		{
+			"fieldname": "custom_notify_name",
+			"label": "Notify Party",
+			"fieldtype": "Data",
+			"insert_after": "custom_buyer_address",
+			"module": MODULE,
+		},
+		{
+			"fieldname": "custom_notify_address",
+			"label": "Notify Address",
+			"fieldtype": "Small Text",
+			"insert_after": "custom_notify_name",
+			"module": MODULE,
+		},
+		{
+			"fieldname": "custom_notify_email",
+			"label": "Notify Email",
+			"fieldtype": "Data",
+			"options": "Email",
+			"insert_after": "custom_notify_address",
+			"module": MODULE,
+		},
+		{
 			"fieldname": "custom_column_break_export",
 			"fieldtype": "Column Break",
 			"insert_after": "custom_buyer_address",
