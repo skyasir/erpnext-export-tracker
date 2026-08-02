@@ -184,3 +184,91 @@ print("=" * 62)
 
 frappe.db.rollback()
 print("\nrolled back")
+
+
+# ======================================================================
+# Air variant -- EXP/399 to Malawi via DHL / Sahar Air Cargo.
+# Same print formats, different output: no containers, BUYER instead of
+# NOTIFY, and the air customs office on the SCOMET letter.
+# ======================================================================
+print("\n\n=== AIR shipment (EXP/399) ===")
+PASS.clear(); FAIL.clear()
+
+so2 = frappe.new_doc("Sales Order")
+so2.customer, so2.company, so2.currency, so2.conversion_rate = CUSTOMER, COMPANY, "USD", 93.0
+so2.transaction_date, so2.delivery_date = today(), add_days(today(), 15)
+so2.custom_is_export = 1
+so2.append("items", {"item_code": ITEM, "qty": 1, "rate": 500, "uom": "Nos",
+                     "warehouse": WAREHOUSE, "delivery_date": add_days(today(), 15)})
+so2.insert(); so2.submit()
+
+air = frappe.get_doc("Export Shipment", {"sales_order": so2.name})
+air.mode = "Air"
+air.destination_country = "Malawi"
+air.consignee_name = "CENTRAL POULTRY 2000 LIMITED"
+air.consignee_address = "P.O. BOX NO.-340\nLILONGWE, MALAWI\nKIND ATTENTION : Mr. SABARI"
+air.buyer_same_as_consignee = 0
+air.buyer_name = "CENTRAL POULTRY 2000 LIMITED"
+air.buyer_address = "PO BOX 340, DUDU ESTATE\nPOSTAL CODES 207236 LILONGWE, MALAWI"
+air.port_of_loading, air.port_of_discharge = "MUMBAI AIRPORT", "LILONGWE AIRPORT"
+air.final_destination, air.country_of_final_destination = "LILONGWE, MALAWI", "MALAWI"
+air.incoterm, air.terms_of_payment = "CFR", "100% ADVANCE"
+air.signatory_name, air.signatory_designation = "Vidya Rijal", "Client Relations"
+air.signatory_contact = "96579 66444"
+air.customs_broker_name = "DHL Express (India) Pvt. Ltd. ('DHL')"
+air.append("packing_items", {"description": "NOSE CLIP", "qty_per_bundle": 5000,
+                             "no_of_packages": 1, "weight_per_package": 3.900})
+air.save()
+check("air shipment has no containers", not air.containers)
+check("packing line still totalled", air.packing_items[0].total_qty == 5000,
+      air.packing_items[0].total_qty)
+check("packages numbered 1 TO 1",
+      (air.packing_items[0].package_from, air.packing_items[0].package_to) == (1, 1))
+
+si2 = frappe.new_doc("Sales Invoice")
+si2.naming_series, si2.customer, si2.company = "EXP/.###", CUSTOMER, COMPANY
+si2.currency, si2.conversion_rate, si2.posting_date = "USD", 93.0, today()
+si2.debit_to, si2.custom_is_export = DEBIT_TO, 1
+si2.custom_export_shipment = air.name
+si2.custom_goods_description = "Poultry Keeping Equipments & Parts there of"
+si2.append("items", {"item_code": ITEM, "qty": 1, "rate": 500, "uom": "Nos",
+                     "income_account": INCOME, "cost_center": COST_CENTER,
+                     "warehouse": WAREHOUSE, "sales_order": so2.name})
+si2.set_missing_values(); si2.insert(); si2.submit()
+air.reload()
+
+AIR_EXPECT = {
+	"SCOMET Letter": ["Sahar Air Cargo Complex", "SCOMET DECLARATION", "HS CODE",
+	                  "CATEGORY 3B/3D OF APPENDIX-3", "Your faithfully",
+	                  "CENTRAL POULTRY 2000 LIMITED", "MALAWI"],
+	"Export Packing List": ["PACKING LIST", "BUYER :", "DUDU ESTATE", "NOSE CLIP",
+	                        "MUMBAI AIRPORT", "LILONGWE AIRPORT", "Vidya Rijal"],
+	"FEMA Declaration": ["DECLARATION", "Name of the Exporter", "Name of Customs Broker",
+	                     "DHL Express", "Foreign Exchange Management Act, 1999",
+	                     "ID Card Number", "Client Relations"],
+	"Customs Broker Authorization": ["Authorization for Export shipment",
+	                                 "To whomsoever it may concern", "DHL Express",
+	                                 "e-way bill", "Vidya Rijal", "Client Relations",
+	                                 "96579 66444", "Individual Shipper Name"],
+	"Export Value Declaration": ["Annexure-A", "100% ADVANCE", "VIDYA RIJAL"],
+}
+for pf, needles in AIR_EXPECT.items():
+	try:
+		html = frappe.get_print("Export Shipment", air.name, print_format=pf)
+		missing = [n for n in needles if n not in html]
+		check("air renders: %s" % pf, not missing, "MISSING %s" % missing if missing else "%d chars" % len(html))
+	except Exception as e:
+		check("air renders: %s" % pf, False, repr(e)[:150])
+
+scomet_air = frappe.get_print("Export Shipment", air.name, print_format="SCOMET Letter")
+check("air SCOMET does NOT use the sea customs office",
+      "Exports Department" not in scomet_air)
+pl_air = frappe.get_print("Export Shipment", air.name, print_format="Export Packing List")
+check("air packing list shows no CONTAINER NO heading", "CONTAINER NO :" not in pl_air)
+
+print("\n" + "=" * 62)
+print("AIR -- PASSED: %d    FAILED: %d" % (len(PASS), len(FAIL)))
+for f in FAIL:
+	print("  -", f)
+print("=" * 62)
+frappe.db.rollback()

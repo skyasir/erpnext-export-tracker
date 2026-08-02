@@ -1,0 +1,70 @@
+{%- set s = frappe.get_doc("Export Tracker Settings") -%}
+{%- set company = frappe.get_doc("Company", doc.company) -%}
+{%- set si = frappe.get_doc("Sales Invoice", doc.sales_invoice) if doc.sales_invoice else None -%}
+{%- macro txt(v) -%}{{ (v or "") | replace("&", "&amp;") }}{%- endmacro -%}
+{%- set signer = doc.signatory_name or s.declaration_signatory -%}
+{%- set signer_desig = doc.signatory_designation or s.declaration_designation -%}
+{%- set dt = (si.posting_date if si else None) or doc.shipping_bill_date -%}
+
+<style>
+	.fema { font-family: "Times New Roman", Times, serif; font-size: 12pt; color: #000; line-height: 1.6; }
+	.fema h3 { text-align: center; font-size: 12pt; font-weight: bold; margin: 0 0 26px;
+	           font-family: Arial, Helvetica, sans-serif; }
+	.fema ol { margin: 8px 0 22px 0; padding-left: 34px; }
+	.fema table { width: 100%; border-collapse: collapse; margin-bottom: 26px; }
+	.fema td { border: 1px solid #000; padding: 7px 8px; font-size: 11pt;
+	           font-family: Arial, Helvetica, sans-serif; vertical-align: top; height: 20px; }
+	.fema .note { font-size: 11pt; }
+	.fema .foot { margin-top: 46px; overflow: hidden; }
+	.fema .foot .l { float: left; }
+	.fema .foot .r { float: right; }
+</style>
+
+<div class="fema">
+	<h3>DECLARATION</h3>
+
+	<p>I/We declare that the particulars given herein above are true, correct and complete.</p>
+
+	<p>I/We enclose herewith copies of the following documents*.</p>
+	<ol>
+		<li>Duty Exemption Entitlement Certificate/ Advance Authorisation/ Duty Free Import
+			Authorisation Declaration</li>
+		<li>Invoice/Invoice cum packing list</li>
+		<li>Quota/Inspection certificates</li>
+		<li>Others (Specify)</li>
+	</ol>
+
+	<table>
+		<tr>
+			<td style="width: 22%;">Name of the Exporter :</td>
+			<td style="width: 28%;">{{ txt(company.company_name) | upper }}</td>
+			<td style="width: 24%;">Name of Customs Broker :</td>
+			<td style="width: 26%;">{{ txt(doc.customs_broker_name) }}</td>
+		</tr>
+		<tr>
+			<td>Designation</td>
+			<td>{{ txt(signer_desig) }}</td>
+			<td>Designation</td>
+			<td>{{ txt(doc.customs_broker_designation) }}</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>ID Card Number</td>
+			<td>{{ txt(doc.customs_broker_id_card) }}</td>
+		</tr>
+	</table>
+
+	<p class="note">
+		I/We undertake to abide by the provisions of Foreign Exchange Management Act, 1999, as
+		amended from time to time, including realisation or repatriation of foreign exchange to or
+		from India.<br>
+		* To be submitted with the exports goods in the warehouse.
+	</p>
+
+	<div class="foot">
+		<span class="l">Dated : {{ frappe.utils.formatdate(dt, "dd.MM.yyyy") if dt else "" }}</span>
+		<span class="r">Signature: <span style="display: inline-block; width: 210px;
+			border-bottom: 1px solid #000;">&nbsp;</span></span>
+	</div>
+</div>

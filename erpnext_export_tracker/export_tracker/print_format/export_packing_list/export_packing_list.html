@@ -41,15 +41,17 @@
 	<tr><td colspan="5" class="ctr b">SHIPMENT TERM - {{ txt(doc.incoterm) }}</td></tr>
 	<tr><td colspan="5" class="ctr b">VESSEL /FLIGHT NO. - {{ txt(doc.vessel_flight_no) }}</td></tr>
 
+	{% set second_party = doc.notify_name or (doc.buyer_name if not doc.buyer_same_as_consignee else "") %}
+	{% set second_addr = doc.notify_address or (doc.buyer_address if not doc.buyer_same_as_consignee else "") %}
 	<tr>
-		<td colspan="4" class="b">NOTIFY :</td>
+		<td colspan="4" class="b">{% if doc.notify_name %}NOTIFY :{% else %}BUYER :{% endif %}</td>
 		<td colspan="2" class="lbl">COUNTRY OF ORIGIN</td>
 		<td colspan="3" class="lbl">COUNTRY OF MANUFACTURING &amp; SUPPLY</td>
 	</tr>
 	<tr>
 		<td colspan="4" rowspan="2">
-			<span class="b">{{ txt(doc.notify_name) }}</span><br>
-			{{ blk(doc.notify_address) }}
+			<span class="b">{{ txt(second_party) }}</span><br>
+			{{ blk(second_addr) }}
 			{% if doc.notify_email %}<br>EMAIL: {{ doc.notify_email }}{% endif %}
 		</td>
 		<td colspan="2" class="ctr">{{ txt(doc.country_of_origin) }}</td>
@@ -103,6 +105,22 @@
 	</tr>
 
 	{% set ns = namespace(sr=0) %}
+	{% if not doc.containers %}
+		{% for r in doc.packing_items %}
+			{% set ns.sr = ns.sr + 1 %}
+			<tr>
+				<td class="ctr">{{ ns.sr }}</td>
+				<td>{{ txt(r.description) | upper }}</td>
+				<td class="ctr">{{ "%g" | format(r.qty_per_bundle or 0) }}</td>
+				<td class="ctr">{{ r.no_of_packages or 0 }}</td>
+				<td class="ctr">{{ "%g" | format(r.total_qty or 0) }}</td>
+				<td class="ctr">{{ "%.3f" | format(r.weight_per_package or 0) }}</td>
+				<td class="ctr">{{ "%.3f" | format(r.total_weight or 0) }}</td>
+				<td class="ctr">{{ r.package_from or "" }}</td>
+				<td class="ctr">TO {{ r.package_to or "" }}</td>
+			</tr>
+		{% endfor %}
+	{% endif %}
 	{% for c in doc.containers %}
 		<tr><td class="grp" colspan="9">CONTAINER NO : {{ c.container_no }}</td></tr>
 		{% for r in doc.packing_items if r.container_no == c.container_no %}
@@ -152,7 +170,7 @@
 		<td colspan="4" style="height: 70px; vertical-align: top; text-align: right;">
 			<span class="b">{{ txt(company.company_name) }}</span>
 			<div style="height: 40px;"></div>
-			<span class="b">{{ txt(s.declaration_signatory) | upper }}</span>
+			<span class="b">{{ txt(doc.signatory_name or s.declaration_signatory) }}</span><br>Authorized Signatory
 		</td>
 	</tr>
 </table>

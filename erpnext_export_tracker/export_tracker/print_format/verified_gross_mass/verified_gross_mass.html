@@ -38,10 +38,10 @@
 			<td>{{ s.iec_code or "" }}</td></tr>
 		<tr><td class="sr">3*</td>
 			<td>Name and designation of official of the shipper authorized to sign document</td>
-			<td>{{ txt(s.declaration_signatory) }}{% if s.declaration_designation %}<br>{{ txt(s.declaration_designation) }}{% endif %}</td></tr>
+			<td>{{ txt(doc.signatory_name or s.declaration_signatory) }}{% if (doc.signatory_designation or s.declaration_designation) %}<br>{{ txt(doc.signatory_designation or s.declaration_designation) }}{% endif %}</td></tr>
 		<tr><td class="sr">4*</td>
 			<td>24 x 7 contact details of authorized official of shipper</td>
-			<td>{{ s.declaration_contact or "" }}</td></tr>
+			<td>{{ doc.signatory_contact or s.declaration_contact or "" }}</td></tr>
 		<tr><td class="sr">5*</td><td>Container No.</td>
 			<td class="cn">{{ c.container_no or "" }}</td></tr>
 		<tr><td class="sr">6*</td><td>Container Size (TEU/FEU/other)</td>
@@ -68,7 +68,7 @@
 	<div class="sign">
 		Signature of Authorized Person of Shipper
 		<div style="height: 46px;"></div>
-		Name: {{ txt(s.declaration_signatory) | upper }}<br>
+		Name: {{ txt(doc.signatory_name or s.declaration_signatory) | upper }}<br>
 		Date: {% if c.weighing_datetime %}{{ frappe.utils.formatdate(c.weighing_datetime, "dd.MM.yyyy") }}{% else %}{{ frappe.utils.formatdate(doc.loading_date, "dd.MM.yyyy") if doc.loading_date else "" }}{% endif %}
 	</div>
 

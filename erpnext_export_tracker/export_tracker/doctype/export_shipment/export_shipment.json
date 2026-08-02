@@ -111,6 +111,14 @@
   "insurance_premium_paid_on",
   "insurance_policy_no",
   "insurance_policy_date",
+  "signatory_section",
+  "signatory_name",
+  "signatory_designation",
+  "signatory_contact",
+  "column_break_signatory",
+  "customs_broker_name",
+  "customs_broker_designation",
+  "customs_broker_id_card",
   "submission_section",
   "management_signed",
   "management_signed_by",
@@ -768,6 +776,49 @@
    "fieldname": "insurance_policy_date",
    "fieldtype": "Date",
    "label": "Policy Date"
+  },
+  {
+   "depends_on": "eval:doc.stage_index >= 2",
+   "description": "Who signs this shipment's documents, and the broker clearing it",
+   "fieldname": "signatory_section",
+   "fieldtype": "Section Break",
+   "label": "Signatory & Customs Broker"
+  },
+  {
+   "description": "Leave blank to use the default from Export Tracker Settings",
+   "fieldname": "signatory_name",
+   "fieldtype": "Data",
+   "label": "Document Signatory"
+  },
+  {
+   "fieldname": "signatory_designation",
+   "fieldtype": "Data",
+   "label": "Signatory Designation"
+  },
+  {
+   "fieldname": "signatory_contact",
+   "fieldtype": "Data",
+   "label": "Signatory Mobile"
+  },
+  {
+   "fieldname": "column_break_signatory",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "e.g. the CHA, or DHL Express (India) Pvt. Ltd. for air courier shipments",
+   "fieldname": "customs_broker_name",
+   "fieldtype": "Data",
+   "label": "Customs Broker / Courier"
+  },
+  {
+   "fieldname": "customs_broker_designation",
+   "fieldtype": "Data",
+   "label": "Broker Designation"
+  },
+  {
+   "fieldname": "customs_broker_id_card",
+   "fieldtype": "Data",
+   "label": "Broker ID Card Number"
   },
   {
    "depends_on": "eval:doc.stage_index >= 6",
