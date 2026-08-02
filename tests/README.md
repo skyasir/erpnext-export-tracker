@@ -13,6 +13,7 @@ cd <bench>/sites
 | Script | Covers |
 |---|---|
 | `uat_core.py` | auto-create on export SO submit, no-create for domestic, CHA comparison + selection gates, country-driven checklist, every stage gate, the EXP invoice series and charge build-up, the Export Invoice print content, payment → XAR → bank → EBRC chain, Export Indent approval sequence, all 10 print formats, all 6 reports, cancel protection, reminder job |
+| `test_print_formats.py` | every print format resolves to a template on disk, every template is registered, each `doc_type` matches its JSON fixture, and each format actually renders — catches the two causes of "No Preview Available" |
 | `test_section_visibility.py` | proves the progressive section-disclosure rules cannot deadlock the workflow: every field a gate demands sits in a section already visible at the stage the action is taken from |
 | `test_export_documents.py` | rebuilds a real 3-container shipment and checks the five documents we issue, their arithmetic, package numbering, and that no print format exists for the three third-party documents |
 | `uat_routes_and_hooks.py` | the LC route gates, the Through Bank document set, part-shipment, the Delivery Note hook, advance-against-order payment, Payment Entry / Sales Invoice cancel paths, the invoice→shipment fallback lookup, the remaining country templates, reports with rows actually in them, PDF generation |
@@ -56,6 +57,17 @@ document, so rewinding a counter can never collide with a record it kept. Edit `
 delete documents you wanted. It also removes orphaned GL and Stock Ledger
 entries; because that last step uses raw SQL and bypasses the `Bin` cache, run
 `repost_stock(item, warehouse)` for any item the tests moved.
+
+## Editing a print format JSON? Bump `modified`
+
+Frappe compares a standard fixture's `modified` timestamp against the database
+and **skips the import when they match**. Editing `doc_type` (or anything else) in
+a print format's `.json` therefore does nothing on migrate until you also bump
+`modified`. Renaming a format is worse: the new name imports as a *new* record and
+the old one is left behind pointing at a template that no longer exists, which the
+UI reports as **"No Preview Available"**.
+
+`test_print_formats.py` fails on both.
 
 ## Known environment dependencies
 
