@@ -25,6 +25,10 @@ import frappe
 
 MODULE = "Export Tracker"
 
+# doctypes we only add custom fields to -- the form belongs to ERPNext, so only
+# our own fields are repositioned there, never anybody else's
+HOSTS = ("Quotation", "Sales Order", "Sales Invoice", "Delivery Note")
+
 
 def execute():
 	resync_all()
@@ -34,7 +38,60 @@ def resync_all():
 	for doctype in frappe.get_all("DocType", filters={"module": MODULE}, pluck="name"):
 		resync(doctype)
 
+	for doctype in HOSTS:
+		if frappe.db.exists("DocType", doctype):
+			reposition(doctype)
+
 	frappe.db.commit()
+
+
+def reposition(doctype):
+	"""Put our custom fields where their `insert_after` says, inside somebody
+	else's field_order.
+
+	Same property setter, different remedy: on a host doctype we have no business
+	rewriting the whole order, so our fields are lifted out and threaded back in
+	along their anchor chain. Everything else keeps the position it had.
+
+	Without this an Export Details tab anchored at the end of the form arrives
+	empty, because the frozen order still holds its sections halfway up the form.
+	"""
+	name = frappe.db.exists("Property Setter", {"doc_type": doctype, "property": "field_order"})
+	if not name:
+		return
+
+	try:
+		order = json.loads(frappe.db.get_value("Property Setter", name, "value") or "[]")
+	except ValueError:
+		return
+
+	ours = {
+		f.fieldname: f.insert_after
+		for f in frappe.get_all("Custom Field", filters={"dt": doctype, "module": MODULE},
+		                        fields=["fieldname", "insert_after"])
+	}
+	if not ours:
+		return
+
+	rest = [f for f in order if f not in ours]
+	pending = dict(ours)
+
+	# thread each field in after its anchor; an anchor that is itself one of ours
+	# only becomes available once that one is placed, so loop until stuck
+	placed = True
+	while pending and placed:
+		placed = False
+		for fieldname, anchor in list(pending.items()):
+			if anchor in rest:
+				rest.insert(rest.index(anchor) + 1, fieldname)
+				del pending[fieldname]
+				placed = True
+
+	rest += list(pending)   # an anchor that no longer exists -- park it at the end
+
+	if rest != order:
+		frappe.db.set_value("Property Setter", name, "value", json.dumps(rest))
+		frappe.clear_cache(doctype=doctype)
 
 
 def resync(doctype):

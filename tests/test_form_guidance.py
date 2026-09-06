@@ -105,6 +105,43 @@ for doctype in ("Export Shipment", "Export Indent", "Export Document Template",
 		check("%s / %s holds %s full width" % (doctype, sec, tables[0]), not breaks,
 		      "column breaks in the section: %s" % (breaks or "none"))
 
+# ---------------------------------------------------------------- export tab
+# The export fields live in their own tab on the host doctypes, shown only when
+# Is Export is ticked. A Tab Break captures everything until the next one, so it
+# has to be the last field on the form -- anchored anywhere else it drags the
+# standard fields below it into the Export tab.
+print("\n=== Export Details tab on the host doctypes ===")
+for host in ("Quotation", "Sales Order", "Sales Invoice"):
+	hmeta = frappe.get_meta(host)
+	names = [df.fieldname for df in hmeta.fields]
+	tab = hmeta.get_field("custom_export_tab")
+
+	check("%-14s has an Export Details tab" % host,
+	      bool(tab) and tab.fieldtype == "Tab Break", tab and tab.fieldtype)
+	if not tab:
+		continue
+	check("%-14s tab is gated on Is Export" % host,
+	      tab.depends_on == "custom_is_export", tab.depends_on)
+
+	at = names.index("custom_export_tab")
+	check("%-14s Is Export stays outside the tab" % host,
+	      names.index("custom_is_export") < at)
+
+	ours = set(frappe.get_all("Custom Field",
+	           filters={"dt": host, "module": "Export Tracker"}, pluck="fieldname"))
+	stranded = [f for f in ours
+	            if f not in ("custom_is_export", "custom_export_tab", "custom_next_followup_date")
+	            and f in names and names.index(f) < at]
+	check("%-14s every export field sits inside the tab" % host, not stranded,
+	      stranded or "none")
+
+	# a section that opens collapsed hides the very fields the tab exists to show
+	collapsed = [df.fieldname for df in hmeta.fields
+	             if df.fieldname in ours and df.fieldtype == "Section Break"
+	             and (df.collapsible or df.depends_on)]
+	check("%-14s export sections open by default" % host, not collapsed,
+	      collapsed or "none")
+
 # ---------------------------------------------------------------- child grids
 # A grid gets 10 column units. Overrun and the last columns fall off; a 1-unit
 # column is roughly 12 characters wide, so a longer label truncates its own

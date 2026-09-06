@@ -55,20 +55,51 @@ def after_install():
 # ----------------------------------------------------------------------
 # custom fields
 # ----------------------------------------------------------------------
+def tab_anchor(doctype):
+	"""Where the Export Details tab goes: after the form's very last field.
+
+	A Tab Break captures everything between it and the next one, so anchoring it
+	mid-form would drag the standard fields below it into the Export tab. Our own
+	fields are skipped so re-running this never nests the tab inside itself.
+	"""
+	ours = set(
+		frappe.get_all("Custom Field", filters={"dt": doctype, "module": MODULE},
+		               pluck="fieldname")
+	)
+	fields = frappe.get_meta(doctype).fields
+	for df in reversed(fields):
+		if df.fieldname not in ours:
+			return df.fieldname
+	return fields[-1].fieldname if fields else None
+
+
 def get_custom_fields():
 	"""Order / invoice level fields.
 
 	The process itself lives on Export Shipment; these are only the attributes
-	that genuinely belong to the order or to the invoice as issued.
+	that genuinely belong to the order or to the invoice as issued. They sit in
+	their own Export Details tab, which only appears once Is Export is ticked.
 	"""
+	export_tab = lambda doctype: {  # noqa: E731
+		"fieldname": "custom_export_tab",
+		"label": "Export Details",
+		"fieldtype": "Tab Break",
+		"insert_after": tab_anchor(doctype),
+		"depends_on": "custom_is_export",
+		"module": MODULE,
+	}
+
 	consignee_fields = lambda insert_after: [  # noqa: E731
 		{
 			"fieldname": "custom_export_details_section",
-			"label": "Export Details",
+			"label": "Consignee & Buyer",
 			"fieldtype": "Section Break",
 			"insert_after": insert_after,
-			"depends_on": "custom_is_export",
-			"collapsible": 1,
+			# both spelled out so an update clears what the old inline section
+			# carried -- create_custom_fields only writes the keys it is given,
+			# so leaving these off would keep the section collapsed and gated
+			"collapsible": 0,
+			"depends_on": "",
 			"module": MODULE,
 		},
 		{
@@ -165,8 +196,10 @@ def get_custom_fields():
 			"label": "Export Shipping Details",
 			"fieldtype": "Section Break",
 			"insert_after": "custom_terms_of_payment",
-			"depends_on": "custom_is_export",
-			"collapsible": 1,
+			# cleared explicitly: the tab carries the Is Export condition now, and
+			# create_custom_fields only writes the keys it is given
+			"depends_on": "",
+			"collapsible": 0,
 			"module": MODULE,
 		},
 		{
@@ -270,7 +303,8 @@ def get_custom_fields():
 	return {
 		"Quotation": [
 			is_export("party_name"),
-			*consignee_fields("custom_is_export"),
+			export_tab("Quotation"),
+			*consignee_fields("custom_export_tab"),
 			{
 				"fieldname": "custom_next_followup_date",
 				"label": "Next Follow-up Date",
@@ -281,7 +315,8 @@ def get_custom_fields():
 		],
 		"Sales Order": [
 			is_export("customer"),
-			*consignee_fields("custom_is_export"),
+			export_tab("Sales Order"),
+			*consignee_fields("custom_export_tab"),
 			{
 				"fieldname": "custom_export_shipment",
 				"label": "Export Shipment",
@@ -295,7 +330,8 @@ def get_custom_fields():
 		],
 		"Sales Invoice": [
 			is_export("customer"),
-			*consignee_fields("custom_is_export"),
+			export_tab("Sales Invoice"),
+			*consignee_fields("custom_export_tab"),
 			*invoice_shipping_fields,
 			{
 				"fieldname": "custom_export_shipment",
