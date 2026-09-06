@@ -11,6 +11,12 @@ they were supposed to introduce, which rendered the row editor as a jumble.
 This rebuilds each property setter from the DocType's own order and splices the
 site's custom fields back in after whatever they were anchored to, so the layout
 lands without discarding anyone's customisation.
+
+It runs on every migrate, not once: a property setter written before a release
+freezes *that* release's layout, so a one-time patch fixes the site it ran on and
+then quietly breaks again the next time the app moves a field. The cost is that a
+deliberate reordering done in Customize Form does not survive a migrate -- the
+app owns the arrangement, the site owns the fields.
 """
 
 import json
@@ -21,6 +27,10 @@ MODULE = "Export Tracker"
 
 
 def execute():
+	resync_all()
+
+
+def resync_all():
 	for doctype in frappe.get_all("DocType", filters={"module": MODULE}, pluck="name"):
 		resync(doctype)
 

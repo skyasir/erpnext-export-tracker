@@ -96,11 +96,37 @@ unfiltered row count (which is what you get if `filters_json` never reaches
 - Charge rows must use **non-GST account heads**, or India Compliance rejects the
   export invoice. See the setup guide.
 
+## Three layers can override the layout this app ships
+
+None of them is visible from the doctype JSON, and each one silently wins:
+
+1. **`field_order` Property Setter** — written whenever anyone opens Customize
+   Form. `Meta.sort_fields()` ranks it above the DocType's own order, so a
+   release that moves a field changes nothing on that site. On a child table it
+   is worse: section breaks drift *after* the fields they introduce and the grid
+   row editor renders as a jumble. The app re-asserts its order on every migrate
+   (`after_migrate` → `resync_form_layouts.resync_all`), splicing site custom
+   fields back in after their anchors.
+2. **`GridView` in `__UserSettings`** — saved per user when someone configures a
+   child grid's columns. It overrides `in_list_view` and `columns` completely;
+   the saved Export CHA Quote layout here asked for seven columns totalling
+   fourteen units against a ten-unit grid. `clear_stale_grid_views` drops the
+   entries for this app's child tables.
+3. **Stray `custom_column_break_*` Custom Fields** — Customize Form leaves these
+   behind. They are preserved, not deleted, so an unlabelled one can still open
+   an empty extra column in a section.
+
+Diagnose the first by comparing `frappe.get_meta(dt).fields` order with
+`tabDocField` order — if they differ, a property setter is winning.
+
 ## What these scripts do not cover
 
 - **Client-side JS** — the Create buttons, the Load Document Checklist button,
   the CHA single-select clearing, the Sales Invoice fetch-from-shipment. Needs a
-  browser.
+  browser. The guidance panel, tab order, CHA grid columns, the row editor
+  layout and the Compare Freight Quotes dialog were verified once by driving
+  headless Chrome over CDP with a minted session, which is how the three
+  override layers above were found — none of them is visible to a Python test.
 - **Workflow transitions and role permissions** — the scripts set `status` and
   save, which exercises the `validate()` gates but not the Actions menu or the
   per-transition `allowed` role. Everything runs as Administrator.

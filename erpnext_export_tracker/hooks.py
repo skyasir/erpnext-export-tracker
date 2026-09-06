@@ -10,6 +10,11 @@ app_license = "mit"
 
 after_install = "erpnext_export_tracker.install.after_install"
 
+# Customize Form's field_order property setter outranks the DocType's own order,
+# so re-assert the app's layout after every migrate -- otherwise a site that has
+# ever opened Customize Form silently keeps whatever layout it froze.
+after_migrate = ["erpnext_export_tracker.patches.resync_form_layouts.resync_all"]
+
 doctype_js = {
 	"Sales Order": "public/js/sales_order.js",
 	"Sales Invoice": "public/js/sales_invoice.js",
