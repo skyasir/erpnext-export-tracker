@@ -1,0 +1,187 @@
+{
+ "actions": [],
+ "autoname": "field:country",
+ "creation": "2026-09-06 10:00:00.000000",
+ "description": "Per-destination compliance rules. Nothing here is hard-coded in the app -- add a profile for any new destination and the shipment picks it up automatically.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "country",
+  "disabled",
+  "column_break_head",
+  "default_port_of_discharge",
+  "default_incoterm",
+  "requirements_section",
+  "inspection_required",
+  "inspection_agency",
+  "column_break_req",
+  "form_m_required",
+  "haulage_required",
+  "column_break_req2",
+  "coo_type",
+  "special_requirement",
+  "documents_section",
+  "documents",
+  "notes_section",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "country",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Country",
+   "options": "Country",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled"
+  },
+  {
+   "fieldname": "column_break_head",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_port_of_discharge",
+   "fieldtype": "Data",
+   "label": "Default Port of Discharge"
+  },
+  {
+   "fieldname": "default_incoterm",
+   "fieldtype": "Link",
+   "label": "Default Incoterm",
+   "options": "Incoterm"
+  },
+  {
+   "fieldname": "requirements_section",
+   "fieldtype": "Section Break",
+   "label": "Compliance Requirements"
+  },
+  {
+   "default": "0",
+   "description": "Turns on the Inspection block on every shipment to this country",
+   "fieldname": "inspection_required",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Pre-Shipment Inspection Required"
+  },
+  {
+   "depends_on": "inspection_required",
+   "description": "SONCAP for Nigeria, SGS for Uganda, and so on",
+   "fieldname": "inspection_agency",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Inspection Agency"
+  },
+  {
+   "fieldname": "column_break_req",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Nigeria: Form M number and BA number must be in hand before dispatch",
+   "fieldname": "form_m_required",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Form M / BA Required"
+  },
+  {
+   "default": "0",
+   "description": "Landlocked destination -- cargo moves by road after the discharge port",
+   "fieldname": "haulage_required",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Inland Haulage Required"
+  },
+  {
+   "fieldname": "column_break_req2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Pre-selected on every shipment to this country",
+   "fieldname": "coo_type",
+   "fieldtype": "Select",
+   "label": "Default Certificate of Origin",
+   "options": "Not Applicable\nMACCIA / Federation\nISFTA (India Sri-Lanka FTA)\nCCVO (Nigeria)"
+  },
+  {
+   "description": "Shown to the user on every shipment to this country",
+   "fieldname": "special_requirement",
+   "fieldtype": "Small Text",
+   "label": "Special Requirement"
+  },
+  {
+   "fieldname": "documents_section",
+   "fieldtype": "Section Break",
+   "label": "Extra Documents for this Destination"
+  },
+  {
+   "description": "Added on top of the matching Export Document Template when the checklist is loaded",
+   "fieldname": "documents",
+   "fieldtype": "Table",
+   "label": "Documents",
+   "options": "Export Document Template Item"
+  },
+  {
+   "fieldname": "notes_section",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text Editor",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-06 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Export Tracker",
+ "name": "Export Country Profile",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User",
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -8,12 +8,25 @@
   "cha",
   "quote_date",
   "currency",
+  "container_type",
+  "charges_section",
   "freight_amount",
+  "local_charges",
+  "thc",
+  "column_break_charges",
+  "documentation_charges",
+  "haulage_charges",
   "other_charges",
+  "column_break_total",
   "total_amount",
+  "schedule_section",
+  "vessel",
+  "etd",
+  "eta",
+  "column_break_schedule",
   "transit_days",
   "free_days",
-  "container_type",
+  "decision_section",
   "is_selected",
   "remarks"
  ],
@@ -23,7 +36,7 @@
    "fieldname": "cha",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "CHA",
+   "label": "Forwarder / CHA",
    "options": "Supplier",
    "reqd": 1
   },
@@ -39,9 +52,49 @@
    "options": "Currency"
   },
   {
+   "fieldname": "container_type",
+   "fieldtype": "Data",
+   "label": "Container Type"
+  },
+  {
+   "fieldname": "charges_section",
+   "fieldtype": "Section Break",
+   "label": "Charges"
+  },
+  {
+   "columns": 1,
    "fieldname": "freight_amount",
    "fieldtype": "Currency",
-   "label": "Freight",
+   "in_list_view": 1,
+   "label": "Ocean / Air Freight",
+   "options": "currency"
+  },
+  {
+   "fieldname": "local_charges",
+   "fieldtype": "Currency",
+   "label": "Local Charges",
+   "options": "currency"
+  },
+  {
+   "fieldname": "thc",
+   "fieldtype": "Currency",
+   "label": "THC",
+   "options": "currency"
+  },
+  {
+   "fieldname": "column_break_charges",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "documentation_charges",
+   "fieldtype": "Currency",
+   "label": "Documentation",
+   "options": "currency"
+  },
+  {
+   "fieldname": "haulage_charges",
+   "fieldtype": "Currency",
+   "label": "Haulage",
    "options": "currency"
   },
   {
@@ -51,37 +104,65 @@
    "options": "currency"
   },
   {
+   "fieldname": "column_break_total",
+   "fieldtype": "Column Break"
+  },
+  {
    "columns": 2,
    "fieldname": "total_amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Total",
+   "label": "Landed Total",
    "options": "currency",
    "read_only": 1
   },
   {
-   "columns": 2,
-   "description": "Transit time in days -- SOP G.c.i.2.b",
+   "fieldname": "schedule_section",
+   "fieldtype": "Section Break",
+   "label": "Schedule"
+  },
+  {
+   "fieldname": "vessel",
+   "fieldtype": "Data",
+   "label": "Vessel"
+  },
+  {
+   "columns": 1,
+   "fieldname": "etd",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "ETD"
+  },
+  {
+   "fieldname": "eta",
+   "fieldtype": "Date",
+   "label": "ETA"
+  },
+  {
+   "fieldname": "column_break_schedule",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
    "fieldname": "transit_days",
    "fieldtype": "Int",
    "in_list_view": 1,
    "label": "Transit Days"
   },
   {
-   "columns": 2,
-   "description": "Free days for unloading at destination -- SOP G.c.i.2.c",
+   "columns": 1,
    "fieldname": "free_days",
    "fieldtype": "Int",
    "in_list_view": 1,
    "label": "Free Days"
   },
   {
-   "fieldname": "container_type",
-   "fieldtype": "Data",
-   "label": "Container Type"
+   "fieldname": "decision_section",
+   "fieldtype": "Section Break",
+   "label": "Decision"
   },
   {
-   "columns": 2,
+   "columns": 1,
    "default": "0",
    "fieldname": "is_selected",
    "fieldtype": "Check",
@@ -90,14 +171,14 @@
   },
   {
    "fieldname": "remarks",
-   "fieldtype": "Data",
+   "fieldtype": "Small Text",
    "label": "Remarks"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-07-30 10:00:00.000000",
+ "modified": "2026-09-06 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Export Tracker",
  "name": "Export CHA Quote",

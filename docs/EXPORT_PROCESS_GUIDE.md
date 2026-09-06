@@ -16,7 +16,9 @@ Every step lists **who** does it, **where** it happens, **what to fill in**, and
 ## Contents
 
 - [Part 0 — One-time setup](#part-0--one-time-setup)
-  - [0.7 How the form reveals itself](#07-how-the-form-reveals-itself)
+  - [0.7 How the form is laid out](#07-how-the-form-is-laid-out)
+  - [0.8 The next-step panel](#08-the-next-step-panel--read-this-before-anything-else)
+  - [0.9 Country profiles](#09-country-profiles--where-a-destinations-rules-live)
 - [Part 1 — Enquiry and requirement gathering](#part-1--enquiry-and-requirement-gathering-sop-a-b)
 - [Part 2 — Quotation](#part-2--quotation-sop-c)
 - [Part 3 — Follow-up and revision](#part-3--follow-up-and-revision-sop-d-e)
@@ -149,40 +151,100 @@ No new roles are created. The workflow uses the standard ones:
 
 ---
 
-### 0.7 How the form reveals itself
+### 0.7 How the form is laid out
 
-The Export Shipment form does not show all of its sections at once. Each section
-appears when the shipment reaches the stage that needs it, and **stays visible
-from then on** — so you never lose sight of the CHA quotes after shipping.
+The Export Shipment form is split into **seven tabs**, so a 290-field record
+reads as seven short ones.
 
-| Section | Appears at |
+| Tab | Holds |
 |---|---|
-| References, Consignee & Buyer, Carriage & Terms, Freight & CHA Comparison, Selected Freight, Letter of Credit, Remarks | immediately |
-| Pre-Shipment Documents, Payment | Indent Approved |
-| Container & Dispatch, Insurance | Freight Finalised |
-| Shipping Bill | Customs Docs Prepared |
-| Post-Shipment Documents, Certificate of Origin & Bill of Lading | Container Loaded |
-| Document Submission | Shipped |
-| Bank Closure | Docs Submitted |
-| Export Incentive | Bank Submission Done |
+| **Overview** | The next-step panel, references, consignee & buyer, carriage & terms, shipment type, remarks |
+| **Compliance** | The destination's requirements, Form M / BA, pre-shipment inspection, insurance |
+| **Production** | Readiness summary and the weekly updates |
+| **Freight & Booking** | CHA comparison, selected freight, route & additional charges, container booking and cut-offs, containers, packing |
+| **Documents** | Pre-shipment checklist, CHA checklist, shipping bill, e-seal, e-way bill, signatory |
+| **Post-Shipment** | Post-shipment checklist, COO, bill of lading, submission, sent-to-client, original documents |
+| **Payment & Closure** | Letter of credit, payment, closure checklist, bank closure, export incentive |
+
+Sections used to *disappear* until the shipment reached their stage. They no
+longer do — a gate could otherwise demand a field you could not see. Instead each
+section starts **collapsed and opens itself** when the stage that needs it
+arrives, so nothing is ever out of reach and nothing is in your way early.
 
 **Every child table sits alone in a full-width section.** A Frappe section that
 also contains a column break renders in two columns, which squeezes the grid to
 half width and truncates its own headers. So the CHA comparison, the two document
-checklists and the indent items each own their section, and the scalar fields that
-go with them live in the section immediately below — *Selected Freight* under the
-CHA grid, *Certificate of Origin & Bill of Lading* under the post-shipment
-checklist, *Totals* under the indent items. A test enforces this
-(`tests/test_section_visibility.py`), so it cannot be undone by accident.
+checklists, the weekly production updates and the indent items each own their
+section, and the scalar fields that go with them live in the section immediately
+below — *Selected Freight* under the CHA grid, *Totals* under the indent items. A
+test enforces this (`tests/test_form_guidance.py`), so it cannot be undone by
+accident.
 
-Every section appears at or before the stage where its fields are first
-demanded, so the disclosure can never block you from advancing. That property is
-enforced by a test (`tests/test_section_visibility.py`), not just intended —
-adding a gate that demands a field from a not-yet-visible section will fail it.
+The Letter of Credit and the Form M, inspection, e-seal and original-document
+blocks do not key off the stage at all — they show when the shipment actually
+needs them (LC route selected, the destination requires an inspection, FCL rather
+than LCL, the client asked for originals).
 
-The Letter of Credit section is the one exception to stage-based reveal: it keys
-off **Post-Shipment Document Route** instead, because the LC has to be accepted
-long before shipment.
+---
+
+### 0.8 The next-step panel — read this before anything else
+
+Every saved shipment opens with a panel above the References section. It answers
+the only three questions the desk actually has.
+
+```
+  Freight Finalised                              Stage 3 of 13 · 17%
+  ▮▮▮▯▯▯▯▯▯▯▯▯▯
+
+  Next: Plan Dispatch → Dispatch Planned
+
+  BLOCKING (1)
+   ● Dispatch Planned On                                          go
+
+  RECOMMENDED (1)
+   ● Route, transshipment and additional charges verified          go
+```
+
+- **Blocking** is what `validate()` will refuse to save. You cannot take the
+  workflow action until every one is cleared.
+- **Recommended** is what the SOP asks for but which is not worth losing your
+  work over — an unverified route, a missing e-way bill number, a draft BL the
+  client has not signed off, a CHA checklist not yet approved. You may advance
+  past them, and if you do they **follow the shipment forward** rather than
+  quietly disappearing, so a skipped step stays visible until it is done.
+- **go** jumps straight to the field, opening the right tab on the way.
+- A destination with a country profile shows its note here too — *"The buyer
+  opens Form M and the BA number before shipment. SONCAP inspection applies."*
+
+The panel is generated from the same list of requirements that `validate()`
+enforces, so it can never promise something the save will then refuse.
+
+---
+
+### 0.9 Country profiles — where a destination's rules live
+
+**Where:** *Export Tracker → Setup → Export Country Profile*
+
+The SOP is explicit that country rules must not be hard-coded. They are not: one
+record per destination holds
+
+- **Pre-Shipment Inspection Required** and the agency (SONCAP, SGS, …)
+- **Form M / BA Required** — Nigeria's pre-shipment finance formality
+- **Inland Haulage Required** — a landlocked destination such as Malawi
+- default port of discharge, default incoterm, default certificate-of-origin type
+- a **Special Requirement** note that shows on every shipment to that country
+- **extra documents** appended to whatever the document template already loads
+
+The install seeds Nigeria, Uganda, Malawi, Nepal, Bhutan and Sri Lanka. Add a
+profile for a new destination and shipments to it pick the rules up on their own.
+
+> **Shipments already in flight keep the flags they started with.** The profile
+> is read when a shipment is created and whenever its destination changes — never
+> retroactively. Switching a rule on today therefore cannot make a shipment that
+> is already past that stage unsaveable. Tick the flag by hand on an individual
+> shipment if you do want it applied.
+
+---
 
 ## Part 1 — Enquiry and requirement gathering *(SOP A, B)*
 
@@ -358,40 +420,64 @@ Status → **Indent Approved**.
 
 ---
 
+## Part 5b — Production readiness *(SOP section 12)*
+
+**Who:** Production · **Where:** Export Shipment → *Production* tab
+
+Once the indent is approved the plant owns the shipment until it is ready. The
+SOP asks for a **weekly** update, so recording one is a single dialog rather than
+a grid row.
+
+**Production → Add Weekly Update** asks for week ending, production status, qty
+completed, qty pending, packing status, expected completion and remarks, then
+saves the shipment. The newest update becomes the shipment's headline production
+status — which is what the *Production Pending* counter on the dashboard and the
+weekly reminder both read — and the full history stays in **Weekly Updates**.
+
+`Not Started → In Production → Partially Ready → Ready → Dispatch Planning`
+
+If a shipment that is still moving has no update in the last seven days, it turns
+up in the daily *"Weekly production update overdue"* mail.
+
+---
+
 ## Part 6 — Freight and CHA comparison *(SOP G.c.i.1–2)*
 
 ### Step 6.1 — Collect quotes
 Send the shipment details to your clearing agents and collect freight quotes.
 
 ### Step 6.2 — Enter them side by side
-**Who:** Sales User · **Where:** Export Shipment → *Freight & CHA Comparison* → **CHA Quotes**
+**Who:** Sales User · **Where:** Export Shipment → *Freight & Booking* → **Freight Comparison**
 
-One row per agent:
+One row per forwarder. The SOP's comparison table is the row editor (click the
+pencil); the grid shows the axes you actually decide on.
 
 | Column | Meaning |
 |---|---|
-| CHA | the supplier |
-| Quote Date | when they quoted |
-| Currency | quote currency |
-| Freight | base freight (row editor) |
-| Other Charges | everything else they add (row editor) |
-| **Total** | shown in the grid — freight + other charges, computed for you |
-| **Transit Days** | shown in the grid — *SOP G.c.i.2.b* |
-| **Free Days** | shown in the grid — free days for unloading at destination, *SOP G.c.i.2.c* |
-| Container Type | what they quoted for |
-| Selected | tick the winner |
+| Forwarder / CHA | the supplier |
+| Quote Date, Currency, Container Type | what they quoted, and for what |
+| **Ocean / Air Freight** | base freight — *in the grid* |
+| Local Charges, THC, Documentation, Haulage, Other Charges | the rest of the SOP's charge lines — row editor |
+| **Landed Total** | *in the grid* — every charge line added up, computed for you |
+| Vessel, ETD, ETA | their schedule; **ETD** is in the grid |
+| **Transit Days** | *in the grid* — *SOP G.c.i.2.b* |
+| **Free Days** | *in the grid* — free days for unloading at destination, *SOP G.c.i.2.c* |
+| **Selected** | tick the winner |
 | Remarks | anything worth remembering |
 
-The grid shows exactly the three axes the SOP compares on — **Total, Transit
-Days, Free Days** — plus the CHA and which one won, so the comparison is a single
-glance. Freight and Other Charges live in the row editor (click the pencil);
-Total is what you compare. The whole quote history stays on the shipment for the
-next negotiation.
+The whole quote history stays on the shipment for the next negotiation.
 
 ### Step 6.3 — Select the winner
-Tick **Selected** on one row. The parent fields **Selected CHA**,
-**Selected Freight**, **Transit Days** and **Free Days** mirror it automatically.
-Ticking a second row clears the first.
+
+**Freight → Compare Freight Quotes** puts the quotes side by side the way the SOP
+draws them — freight, local + THC, documentation + haulage + other, landed total,
+transit, free days, ETD — and tags the **cheapest** and the **fastest**. One click
+on *Select* picks that forwarder and closes the dialog.
+
+Or tick **Selected** on a row directly. Either way the parent fields **Selected
+CHA**, **Selected Freight**, **Transit Days** and **Free Days** mirror it
+automatically, the vessel and ETA copy across if the shipment does not have them
+yet, and ticking a second row clears the first.
 
 > **Gates:**
 > - Two rows selected → *"Only one CHA quote can be marked as Selected. Rows 1, 2 are all selected."*
@@ -410,18 +496,77 @@ Ticking a second row clears the first.
 Agree the dispatch date with the people responsible for dispatch, then set
 **Dispatch Planned On**.
 
-### Step 7.2 — Book the container with the CHA
-Confirm size, type and availability, then fill **Container Type** and
-**No of Containers**.
+### Step 7.2 — Verify the route before you book *(SOP section 14)*
+**Where:** Export Shipment → *Freight & Booking* → **Route & Additional Charges**
 
-### Step 7.3 — Advance
+Before the booking goes out, check the route end to end and record it:
+**Route**, **Transshipment Port**, **Destination Charges**, **Special Country
+Charges**, and — for a landlocked destination such as Malawi — **Inland Haulage
+Charges**, which only appears when the country profile says haulage is required.
+Then tick **Route & Charges Verified**.
+
+That tick is a *recommendation*, not a blocker: it shows in the next-step panel
+and follows the shipment forward until it is done, but it will not stop you
+booking a vessel at four in the afternoon.
+
+### Step 7.3 — Book the container with the CHA *(SOP section 15)*
+**Where:** Export Shipment → *Freight & Booking* → **Container Booking**
+
+Record **Booking No**, **Booking Date** and **Voyage No** — the vessel name is
+already on the Overview tab — then the four deadlines that decide whether the
+cargo makes this sailing:
+
+| Cut-off | What it gates |
+|---|---|
+| **Gate / Cargo Cut-off** | the container has to be inside the terminal |
+| **SI Cut-off** | shipping instructions to the line |
+| **VGM Cut-off** | verified gross mass declaration |
+| **Documentation Cut-off** | the line's paperwork |
+
+Within three days of any of them the shipment shows a **red or amber indicator**
+at the top of the form, and the daily reminder mails the desk. Confirm size, type
+and availability, then fill **Container Type** and **No of Containers** on the
+*Container & Dispatch* section.
+
+### Step 7.4 — Advance
 *Actions → Plan Dispatch*. Status → **Dispatch Planned**.
 
-> **Gate:** *"Set Dispatch Planned On before moving past dispatch planning."*
+> **Gates:**
+> - *"Set Dispatch Planned On before moving past dispatch planning."*
+> - For a destination whose profile requires it, **Form M No** and **BA No** —
+>   see Part 8.0.
 
 ---
 
 ## Part 8 — Pre-shipment documents *(SOP G.c.i.5)*
+
+### Step 8.0 — Destination compliance *(SOP sections 9 and 16)*
+**Who:** Export Executive · **Where:** Export Shipment → *Compliance* tab
+
+The **Destination Requirements** section shows which of the three switches the
+country profile turned on for this shipment. Each one reveals its own block only
+when it applies.
+
+**Form M / BA** — Nigeria. The buyer opens Form M with their bank and gets a BA
+number; nothing ships before both are in hand. Record **Form M No**, **Form M
+Date**, **Form M Status**, **BA No**, **BA Date**, the approval date and a copy of
+each. *Form M No* and *BA No* are **blocking** at Dispatch Planned.
+
+**Pre-Shipment Inspection** — SONCAP for Nigeria, SGS for Uganda, whatever a new
+profile names. Work it through
+`Not Started → Agent Assigned → Requested → Scheduled → Completed → Draft Report
+→ Client Approved → Final Report`, recording the agency, agent, location, request
+and inspection dates, the report number and the report itself. The agency's
+invoice goes in the same block — **Inspection Invoice No**, amount and
+**Accounts Payment Status** — so Accounts can be handed it without a separate
+mail.
+
+> **Gate (Customs Docs Prepared):** the inspection has to be closed out — status
+> *Final Report*, or a report number recorded. If this destination no longer
+> needs one, untick **Pre-Shipment Inspection Required** on the shipment.
+
+**Inland Haulage** — a landlocked destination. Turns on the haulage charge field
+in *Route & Additional Charges*.
 
 ### Step 8.1 — Set the route and destination
 **Who:** Sales User · **Where:** Export Shipment → *References*
@@ -612,18 +757,51 @@ Enter the shipping bill details (Part 11), then *Actions → Mark Shipped*.
 
 ---
 
-## Part 11 — Shipping bill
+## Part 11 — CHA checklist, shipping bill, e-seal, e-way bill
 
-**Who:** Sales User · **Where:** Export Shipment → *Shipping Bill*
+### Step 11.1 — The CHA checklist *(SOP section 24)*
+**Who:** CHA Coordinator · **Where:** Export Shipment → *Documents* → **CHA & Checklist**
+
+The CHA gets the final documents and sends back a checklist to verify before they
+file. Record **Documents Sent to CHA On**, attach the **CHA Checklist**, and walk
+the status through
+`Not Sent → Awaiting Checklist → Under Review → Corrections Sent → Approved`,
+reviewing invoice, HSN, value, quantity, container and seal numbers, buyer,
+consignee, port, country and weight against it. Setting it to *Approved* stamps
+who approved it and when.
+
+An unapproved checklist shows as a **recommendation** on the way to Shipped — it
+will not block the save, but it stays on the panel until it is done.
+
+### Step 11.2 — Shipping bill
+
+**Who:** Sales User · **Where:** Export Shipment → *Documents* → **Shipping Bill**
 
 | Field | Notes |
 |---|---|
 | Shipping Bill No | from the filed shipping bill |
 | Shipping Bill Date | **starts the realisation clock** |
+| FOB Value | as declared |
 | Port Code | needed again at bank submission |
 | Let Export Order Date | when LEO is granted |
-| ETD / ETA | sailing and expected arrival |
-| Vessel / Flight No | |
+| Examination Report | the customs examination report, if any |
+| Shipping Bill Copy | the filed document |
+| ETD / ETA, Vessel / Flight No | on the Overview tab |
+
+### Step 11.3 — E-sealing after the shipping bill *(SOP section 26)*
+**Where:** Export Shipment → *Documents* → **E-Seal / RFID**
+
+Only for FCL — the block hides itself for LCL, where the line's own seal applies.
+Record the **E-Seal No**, date, provider/site, the container it went on, and the
+portal confirmation. Missing on an FCL shipment it shows as a recommendation, not
+a wall.
+
+### Step 11.4 — E-way bill *(SOP section 27)*
+**Who:** Dispatch · **Where:** Export Shipment → *Documents* → **E-Way Bill**
+
+**E-Way Bill No**, date, **Valid Upto**, **Vehicle No**, **Transporter**, **LR
+No** and **LR Date**, plus a copy. The LR is one of the three documents an INR
+shipment cannot close without.
 
 *Actions → Mark Shipped*. Status → **Shipped**.
 
@@ -727,12 +905,39 @@ The daily reminder warns 15 days before either LC deadline.
 Tick **Signed by Management**. The system stamps **Signed By** and **Signed On**.
 The SOP is explicit that bank documents cannot go without it.
 
-### Step 14.2 — Send the documents
+### Step 14.2 — Build the document pack *(SOP section 33)*
+
+**Documents → Download Document Pack** zips every file attached to the shipment
+into one archive, foldered:
+
+```
+1 Pre-Shipment/   every checklist row with an attachment
+2 Post-Shipment/  every checklist row with an attachment
+3 Shipment/       shipping bill, examination report, BL, COO, e-way bill,
+                  e-seal confirmation, inspection report, Form M, BA,
+                  CHA checklist, EBRC
+```
+
+The zip is saved as an attachment on the shipment, so what was sent is on the
+record. Rows whose file has since been deleted are listed rather than skipped
+silently, and a shipment with nothing attached is refused with *"Nothing to pack
+yet."*
+
+### Step 14.3 — Send the documents
 Fill **Courier / Reference No** and **Submitted To (Bank / Client)**.
 **Documents Submitted On** stamps itself with today's date when you take the
 action, and stays editable if the real date differs.
 
-### Step 14.3 — Advance
+**Sent to Client** records the email — date, recipient, and the client's
+acknowledgement when it comes back.
+
+**Original Documents** *(SOP section 35)* — if the client wants originals, tick
+**Original Documents Required** and the block opens: confirm the courier address
+first (that tick is a recommendation on the way to Docs Submitted), then record
+courier company, tracking number, dispatch date, delivery status and the list of
+what went.
+
+### Step 14.4 — Advance
 **Who:** Sales Manager · *Actions → Submit Documents*. Status → **Docs Submitted**.
 
 > **Gate:** *"Documents cannot be submitted without the management signature. Tick Signed by Management."*
@@ -769,6 +974,22 @@ This is *SOP G.h.2*, generated rather than typed.
 
 **This whole part is blocked until the final payment is in.** That is the SOP's
 own precondition, enforced by the system.
+
+### Step 16.0 — The closure checklist *(SOP section 37)*
+**Where:** Export Shipment → *Payment & Closure* → **Closure Checklist**
+
+A shipment is not closed because it sailed. The checklist above the bank-closure
+fields shows what this shipment specifically needs, and it differs by currency:
+
+| Invoice currency | Mandatory to close |
+|---|---|
+| Anything but INR | Invoice · Shipping Bill · Bill of Lading |
+| **INR** | Shipping Bill · Invoice · **LR** |
+
+Green means the system can see it; red means it is missing, with a **go** link to
+the field. The same list appears on the next-step panel as the shipment reaches
+EBRC, as a recommendation rather than a hard refusal — an EBRC that genuinely
+arrived should never be blocked by a filing gap.
 
 ### Step 16.1 — Confirm payment received
 **Who:** Accounts User · *Actions → Confirm Payment Received*. Status → **Payment Received**.
@@ -867,6 +1088,25 @@ shipment as a record.
 
 ## Part 18 — Reports and daily reminders
 
+### The Export Control Tower
+**Where:** the *Export Tracker* workspace
+
+The workspace opens on eleven live counters, grouped the way the SOP groups them,
+over a bar chart of every shipment by stage.
+
+| Group | Counters |
+|---|---|
+| Commercial | Quotations Pending |
+| Production | Indent Approval Pending · Production Pending |
+| Payment | Payment Outstanding *(total value, not a count)* |
+| Logistics | Freight Selection Pending · Booking Pending |
+| Compliance | Form M Pending · Inspection Pending |
+| Documentation | Shipping Bill Pending · BL Approval Pending |
+| Closure | Closure Pending |
+
+Each one clicks through to the filtered list. Below them, shortcuts to Export
+Shipment, Export Indent, the status board and the pending-documents report.
+
 ### Reports
 **Where:** *Export Tracker → Reports*
 
@@ -884,7 +1124,11 @@ shipment as a record.
 One job runs each day and emails two audiences:
 
 **Sales role** — export quotations awaiting follow-up; pre-shipment documents not
-ready with ETD inside the alert window; LCs approaching expiry or last shipment date.
+ready with ETD inside the alert window; **vessel, SI, VGM and documentation
+cut-offs within three days**; **Form M / BA still missing** and **inspections not
+closed out**; **draft BLs the client has not approved after two days**; **weekly
+production updates more than a week old**; LCs approaching expiry or last shipment
+date.
 
 **Accounts role** — fully paid shipments with no XAR after N days; XAR done with
 no EBRC after N days; shipments whose realisation window is closing.
@@ -916,31 +1160,62 @@ above, so the information is never lost, only the email.
 
 ## Appendix B — Every gate and its exact message
 
-| Stage | Requirement | Message |
-|---|---|---|
-| Indent Approved | linked indent must be approved | *"Export Indent EXP-IND-… is not approved by management yet."* |
-| Freight Finalised | exactly one selected CHA quote | *"Mark one CHA quote as Selected before finalising freight…"* |
-| any save | at most one selected quote | *"Only one CHA quote can be marked as Selected. Rows 1, 2 are all selected."* |
-| Dispatch Planned | dispatch date | *"Set Dispatch Planned On before moving past dispatch planning."* |
-| Customs Docs Prepared | all required pre-shipment rows prepared | *"These required Pre-Shipment documents are not prepared yet: …"* |
-| Container Loaded | loading date, container no, both seals | *"Container loading is incomplete. Missing: …"* |
-| Shipped | shipping bill no + date, ETD | *"Cannot mark as Shipped. Missing: …"* |
-| Shipped (LC) | LC received | *"Under a Letter of Credit the LC must be received before shipment…"* |
-| Shipped (LC) | ETD within LC's last shipment date | *"ETD … is after the LC's Last Date of Shipment …"* |
-| Post-Shipment Docs | all required rows prepared | *"These required Post-Shipment documents are not prepared yet: …"* |
-| Post-Shipment Docs | BL number | *"BL / AWB No is required for post-shipment documents."* |
-| Post-Shipment Docs | COO number if a type is set | *"Certificate of Origin type is … but the COO No is not filled in."* |
-| Post-Shipment Docs | policy number if insured | *"Insurance is applicable but the Policy No has not been received yet."* |
-| Docs Submitted | management signature | *"Documents cannot be submitted without the management signature…"* |
-| Payment Received | invoice fully paid | *"Bank closure cannot start before the final payment is received. Outstanding on this shipment is …"* |
-| XAR Generated | XAR no + date | *"XAR No and XAR Date are required once the XAR is generated."* |
-| Bank Submission Done | shipping bill no, port code | *"Bank submission is incomplete. Missing: …"* |
-| EBRC Generated | EBRC no + date | *"EBRC No and EBRC Date are required to close the shipment."* |
-| Export Indent | production before management | *"Production must confirm the technical details before management approval."* |
-| Sales Order cancel | no live shipment | *"Export Shipment … is already at status …. Roll it back or delete it before cancelling this Sales Order."* |
+Gates come in two strengths. **Blocking** ones refuse the save; **recommended**
+ones only show on the next-step panel and in the reports, and follow the shipment
+forward until they are done.
 
-Every one of these is enforced on **save**, not just on the workflow button — so
-they hold for API writes and bulk edits too.
+### Blocking
+
+Most of them share one message. The panel lists them individually before you ever
+press the button, and the save repeats them if you do:
+
+> **Freight Finalised is incomplete**
+> Freight Finalised is not complete. Still needed:
+> • One CHA / forwarder quote marked as Selected
+
+| Stage | What it demands |
+|---|---|
+| Indent Approved | the linked indent is approved by management |
+| Freight Finalised | exactly one selected CHA / forwarder quote |
+| Dispatch Planned | Dispatch Planned On; **Form M No** and **BA No** where the destination profile requires them |
+| Customs Docs Prepared | **Shipment Type (FCL / LCL)**; every required pre-shipment document prepared, listed by name; the **inspection closed out** where the destination requires one |
+| Container Loaded | Container Loaded On, Container No(s), Customs Seal No, Shipping Line Seal No |
+| Shipped | Shipping Bill No, Shipping Bill Date, ETD; under an LC, LC received from the customer |
+| Post-Shipment Docs Prepared | every required post-shipment document; BL / AWB No; COO No when a type is set; Insurance Policy No when insured |
+| Docs Submitted | Signed by Management |
+| Payment Received | invoice fully paid — *"Full payment received"*, with the outstanding shown as a hint |
+| XAR Generated | XAR No, XAR Date |
+| Bank Submission Done | Shipping Bill No, Port Code |
+| EBRC Generated | EBRC No, EBRC Date |
+
+Four gates are comparisons rather than "is this filled in", and keep their own
+wording:
+
+| Where | Message |
+|---|---|
+| any save | *"Only one CHA quote can be marked as Selected. Rows 1, 2 are all selected."* |
+| any save | *"Packing row 3 names container ABCD1234567, which is not in the Containers table."* |
+| Shipped, under an LC | *"ETD 12-03-2026 is after the LC's Last Date of Shipment 28-02-2026."* |
+| Export Indent | *"Production must confirm the technical details before management approval."* |
+| Sales Order cancel | *"Export Shipment … is already at status …. Roll it back or delete it before cancelling this Sales Order."* |
+
+### Recommended
+
+These never refuse a save. They appear under **RECOMMENDED** on the panel, carry
+forward if you advance past them, and feed the dashboard counters and the daily
+mail.
+
+| Stage | What it asks for |
+|---|---|
+| Freight Finalised | Route, transshipment and additional charges verified |
+| Shipped | CHA checklist approved · E-Seal / RFID No (FCL only) · E-Way Bill No |
+| Post-Shipment Docs Prepared | Client approved the draft BL |
+| Docs Submitted | Courier address confirmed, when originals are required |
+| EBRC Generated | the currency-specific closure checklist — Invoice + Shipping Bill + BL, or Shipping Bill + Invoice + LR for INR |
+
+Every one of these is evaluated on **save**, not just on the workflow button — so
+they hold for API writes and bulk edits too, and the panel is generated from the
+same list, so it can never promise something the save will refuse.
 
 ---
 

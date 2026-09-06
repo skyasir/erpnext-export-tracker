@@ -8,6 +8,9 @@
   "naming_series",
   "status",
   "stage_index",
+  "tab_overview",
+  "guidance_section",
+  "next_step_html",
   "links_section",
   "sales_order",
   "customer",
@@ -36,6 +39,7 @@
   "buyer_email",
   "carriage_section",
   "mode",
+  "shipment_type",
   "pre_carriage_by",
   "place_of_receipt",
   "port_of_loading",
@@ -51,6 +55,61 @@
   "terms_of_payment",
   "etd",
   "eta",
+  "remarks_section",
+  "remarks",
+  "tab_compliance",
+  "country_profile_section",
+  "country_profile",
+  "country_requirement_html",
+  "column_break_profile",
+  "inspection_required",
+  "form_m_required",
+  "haulage_required",
+  "form_m_section",
+  "form_m_no",
+  "form_m_date",
+  "form_m_status",
+  "form_m_attachment",
+  "column_break_form_m",
+  "ba_no",
+  "ba_date",
+  "ba_attachment",
+  "form_m_approved_on",
+  "inspection_section",
+  "inspection_agency",
+  "inspection_agent",
+  "inspection_location",
+  "inspection_request_date",
+  "inspection_date",
+  "column_break_inspection",
+  "inspection_status",
+  "inspection_report_no",
+  "inspection_report",
+  "inspection_client_approved",
+  "column_break_inspection_2",
+  "inspection_invoice_no",
+  "inspection_invoice_amount",
+  "inspection_payment_status",
+  "insurance_section",
+  "insurance_required",
+  "insurance_company",
+  "insurance_premium_requested_on",
+  "column_break_insurance",
+  "insurance_premium_paid_on",
+  "insurance_policy_no",
+  "insurance_policy_date",
+  "tab_production",
+  "production_section",
+  "production_status",
+  "qty_completed",
+  "qty_pending",
+  "column_break_production",
+  "packing_status",
+  "expected_completion_date",
+  "last_production_update",
+  "production_updates_section",
+  "production_updates",
+  "tab_logistics",
   "freight_section",
   "cha_quotes",
   "selected_freight_section",
@@ -61,6 +120,23 @@
   "selected_transit_days",
   "selected_free_days",
   "freight_remarks",
+  "route_section",
+  "route",
+  "transshipment_port",
+  "route_verified",
+  "column_break_route_charges",
+  "inland_haulage_charges",
+  "destination_charges",
+  "special_country_charges",
+  "booking_section",
+  "booking_no",
+  "booking_date",
+  "voyage_no",
+  "column_break_booking",
+  "cutoff_date",
+  "si_cutoff",
+  "vgm_cutoff",
+  "doc_cutoff",
   "container_section",
   "container_type",
   "no_of_containers",
@@ -70,8 +146,6 @@
   "loading_date",
   "customs_seal_no",
   "shipping_line_seal_no",
-  "e_seal_no",
-  "e_seal_date",
   "column_break_weights",
   "net_weight",
   "gross_weight",
@@ -82,35 +156,44 @@
   "containers",
   "packing_section",
   "packing_items",
+  "tab_documents",
   "pre_shipment_section",
   "document_template",
   "pre_shipment_documents",
+  "cha_section",
+  "cha_docs_sent_on",
+  "cha_checklist_status",
+  "cha_checklist",
+  "column_break_cha",
+  "cha_checklist_approved_by",
+  "cha_checklist_approved_on",
+  "cha_checklist_remarks",
   "customs_section",
   "shipping_bill_no",
   "shipping_bill_date",
+  "fob_value",
   "column_break_customs",
   "port_code",
   "leo_date",
-  "post_shipment_section",
-  "post_shipment_documents",
-  "coo_bl_section",
-  "coo_type",
-  "coo_no",
-  "coo_date",
-  "column_break_bl",
-  "bl_type",
-  "bl_no",
-  "bl_date",
-  "bl_courier_no",
-  "bl_courier_date",
-  "insurance_section",
-  "insurance_required",
-  "insurance_company",
-  "insurance_premium_requested_on",
-  "column_break_insurance",
-  "insurance_premium_paid_on",
-  "insurance_policy_no",
-  "insurance_policy_date",
+  "examination_report",
+  "shipping_bill_attachment",
+  "eseal_section",
+  "e_seal_no",
+  "e_seal_date",
+  "e_seal_provider",
+  "column_break_eseal",
+  "e_seal_container_no",
+  "e_seal_attachment",
+  "eway_section",
+  "eway_bill_no",
+  "eway_bill_date",
+  "eway_validity_date",
+  "column_break_eway",
+  "vehicle_no",
+  "transporter",
+  "lr_no",
+  "lr_date",
+  "eway_attachment",
   "signatory_section",
   "signatory_name",
   "signatory_designation",
@@ -119,6 +202,28 @@
   "customs_broker_name",
   "customs_broker_designation",
   "customs_broker_id_card",
+  "tab_post_shipment",
+  "post_shipment_section",
+  "post_shipment_documents",
+  "coo_bl_section",
+  "coo_type",
+  "coo_no",
+  "coo_date",
+  "coo_application_no",
+  "coo_applied_on",
+  "coo_payment_done",
+  "coo_attachment",
+  "bl_section",
+  "bl_type",
+  "bl_no",
+  "bl_date",
+  "bl_attachment",
+  "column_break_bl",
+  "draft_bl_received_on",
+  "draft_bl_sent_on",
+  "bl_client_approved_on",
+  "bl_courier_no",
+  "bl_courier_date",
   "submission_section",
   "management_signed",
   "management_signed_by",
@@ -127,17 +232,38 @@
   "docs_submitted_on",
   "docs_courier_no",
   "submitted_to_bank",
+  "client_submission_section",
+  "docs_emailed_on",
+  "docs_emailed_to",
+  "column_break_client_submission",
+  "client_acknowledged",
+  "client_ack_date",
+  "originals_section",
+  "originals_required",
+  "originals_address_confirmed",
+  "courier_company",
+  "courier_tracking_no",
+  "column_break_originals",
+  "originals_dispatch_date",
+  "originals_delivery_status",
+  "originals_document_list",
+  "tab_closure",
   "lc_section",
   "lc_no",
   "lc_issuing_bank",
+  "lc_advising_bank",
   "lc_draft_received_on",
   "lc_terms_reviewed",
   "lc_management_confirmed",
   "column_break_lc",
+  "lc_applicant",
+  "lc_beneficiary",
+  "lc_amount",
   "lc_acceptance_sent_on",
   "lc_received_on",
   "lc_expiry_date",
   "lc_last_shipment_date",
+  "lc_presentation_days",
   "lc_payment_released_on",
   "payment_section",
   "invoice_amount",
@@ -146,6 +272,8 @@
   "outstanding_amount",
   "payment_status",
   "final_payment_date",
+  "closure_checklist_section",
+  "closure_checklist_html",
   "closure_section",
   "xar_no",
   "xar_date",
@@ -164,9 +292,7 @@
   "rodtep_scrip_no",
   "rodtep_amount",
   "drawback_amount",
-  "company_currency",
-  "remarks_section",
-  "remarks"
+  "company_currency"
  ],
  "fields": [
   {
@@ -196,6 +322,19 @@
    "label": "Stage Index",
    "no_copy": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "tab_overview",
+   "fieldtype": "Tab Break",
+   "label": "Overview"
+  },
+  {
+   "fieldname": "guidance_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "next_step_html",
+   "fieldtype": "HTML"
   },
   {
    "fieldname": "links_section",
@@ -365,6 +504,13 @@
    "options": "Sea\nAir\nRoad"
   },
   {
+   "description": "FCL shipments need company e-sealing; LCL does not.",
+   "fieldname": "shipment_type",
+   "fieldtype": "Select",
+   "label": "Shipment Type",
+   "options": "\nFCL\nLCL\nAir\nCourier"
+  },
+  {
    "fieldname": "pre_carriage_by",
    "fieldtype": "Data",
    "label": "Pre-Carriage By"
@@ -441,10 +587,307 @@
    "label": "ETA"
   },
   {
+   "fieldname": "remarks_section",
+   "fieldtype": "Section Break",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "tab_compliance",
+   "fieldtype": "Tab Break",
+   "label": "Compliance"
+  },
+  {
+   "fieldname": "country_profile_section",
+   "fieldtype": "Section Break",
+   "label": "Destination Requirements"
+  },
+  {
+   "description": "Matched from the destination country",
+   "fieldname": "country_profile",
+   "fieldtype": "Link",
+   "label": "Country Profile",
+   "options": "Export Country Profile",
+   "read_only": 1
+  },
+  {
+   "fieldname": "country_requirement_html",
+   "fieldtype": "HTML"
+  },
+  {
+   "fieldname": "column_break_profile",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "inspection_required",
+   "fieldtype": "Check",
+   "label": "Pre-Shipment Inspection Required"
+  },
+  {
+   "default": "0",
+   "fieldname": "form_m_required",
+   "fieldtype": "Check",
+   "label": "Form M / BA Required"
+  },
+  {
+   "default": "0",
+   "fieldname": "haulage_required",
+   "fieldtype": "Check",
+   "label": "Inland Haulage Required"
+  },
+  {
+   "depends_on": "form_m_required",
+   "fieldname": "form_m_section",
+   "fieldtype": "Section Break",
+   "label": "Form M / BA"
+  },
+  {
+   "fieldname": "form_m_no",
+   "fieldtype": "Data",
+   "label": "Form M No"
+  },
+  {
+   "fieldname": "form_m_date",
+   "fieldtype": "Date",
+   "label": "Form M Date"
+  },
+  {
+   "default": "Not Started",
+   "fieldname": "form_m_status",
+   "fieldtype": "Select",
+   "label": "Form M Status",
+   "options": "\nNot Started\nApplied\nApproved\nRejected"
+  },
+  {
+   "fieldname": "form_m_attachment",
+   "fieldtype": "Attach",
+   "label": "Form M Copy"
+  },
+  {
+   "fieldname": "column_break_form_m",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ba_no",
+   "fieldtype": "Data",
+   "label": "BA No"
+  },
+  {
+   "fieldname": "ba_date",
+   "fieldtype": "Date",
+   "label": "BA Date"
+  },
+  {
+   "fieldname": "ba_attachment",
+   "fieldtype": "Attach",
+   "label": "BA Copy"
+  },
+  {
+   "fieldname": "form_m_approved_on",
+   "fieldtype": "Date",
+   "label": "Approval Date"
+  },
+  {
+   "depends_on": "inspection_required",
+   "fieldname": "inspection_section",
+   "fieldtype": "Section Break",
+   "label": "Pre-Shipment Inspection"
+  },
+  {
+   "fieldname": "inspection_agency",
+   "fieldtype": "Data",
+   "label": "Inspection Agency"
+  },
+  {
+   "fieldname": "inspection_agent",
+   "fieldtype": "Data",
+   "label": "Agent"
+  },
+  {
+   "fieldname": "inspection_location",
+   "fieldtype": "Data",
+   "label": "Location"
+  },
+  {
+   "fieldname": "inspection_request_date",
+   "fieldtype": "Date",
+   "label": "Requested On"
+  },
+  {
+   "fieldname": "inspection_date",
+   "fieldtype": "Date",
+   "label": "Inspection Date"
+  },
+  {
+   "fieldname": "column_break_inspection",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Not Started",
+   "fieldname": "inspection_status",
+   "fieldtype": "Select",
+   "label": "Inspection Status",
+   "options": "\nNot Started\nAgent Assigned\nRequested\nScheduled\nCompleted\nDraft Report\nClient Approved\nFinal Report"
+  },
+  {
+   "fieldname": "inspection_report_no",
+   "fieldtype": "Data",
+   "label": "Report No"
+  },
+  {
+   "fieldname": "inspection_report",
+   "fieldtype": "Attach",
+   "label": "Inspection Report"
+  },
+  {
+   "default": "0",
+   "fieldname": "inspection_client_approved",
+   "fieldtype": "Check",
+   "label": "Client Approved"
+  },
+  {
+   "fieldname": "column_break_inspection_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "inspection_invoice_no",
+   "fieldtype": "Data",
+   "label": "Inspection Invoice No"
+  },
+  {
+   "fieldname": "inspection_invoice_amount",
+   "fieldtype": "Currency",
+   "label": "Inspection Invoice Amount",
+   "options": "currency"
+  },
+  {
+   "default": "Not Applicable",
+   "fieldname": "inspection_payment_status",
+   "fieldtype": "Select",
+   "label": "Accounts Payment Status",
+   "options": "\nNot Applicable\nSent to Accounts\nPaid"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.stage_index >= 2",
+   "fieldname": "insurance_section",
+   "fieldtype": "Section Break",
+   "label": "Insurance"
+  },
+  {
+   "default": "0",
+   "fieldname": "insurance_required",
+   "fieldtype": "Check",
+   "label": "Insurance Applicable"
+  },
+  {
+   "depends_on": "insurance_required",
+   "fieldname": "insurance_company",
+   "fieldtype": "Data",
+   "label": "Insurance Company"
+  },
+  {
+   "depends_on": "insurance_required",
+   "fieldname": "insurance_premium_requested_on",
+   "fieldtype": "Date",
+   "label": "Premium Request Raised to Accounts"
+  },
+  {
+   "fieldname": "column_break_insurance",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "insurance_required",
+   "fieldname": "insurance_premium_paid_on",
+   "fieldtype": "Date",
+   "label": "Premium Paid On"
+  },
+  {
+   "depends_on": "insurance_required",
+   "fieldname": "insurance_policy_no",
+   "fieldtype": "Data",
+   "label": "Policy No"
+  },
+  {
+   "depends_on": "insurance_required",
+   "fieldname": "insurance_policy_date",
+   "fieldtype": "Date",
+   "label": "Policy Date"
+  },
+  {
+   "fieldname": "tab_production",
+   "fieldtype": "Tab Break",
+   "label": "Production"
+  },
+  {
+   "fieldname": "production_section",
+   "fieldtype": "Section Break",
+   "label": "Readiness"
+  },
+  {
+   "default": "Not Started",
+   "fieldname": "production_status",
+   "fieldtype": "Select",
+   "label": "Production Status",
+   "options": "\nNot Started\nIn Production\nPartially Ready\nReady\nDispatch Planning"
+  },
+  {
+   "fieldname": "qty_completed",
+   "fieldtype": "Float",
+   "label": "Qty Completed"
+  },
+  {
+   "fieldname": "qty_pending",
+   "fieldtype": "Float",
+   "label": "Qty Pending"
+  },
+  {
+   "fieldname": "column_break_production",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "packing_status",
+   "fieldtype": "Select",
+   "label": "Packing Status",
+   "options": "\nNot Started\nIn Progress\nCompleted"
+  },
+  {
+   "fieldname": "expected_completion_date",
+   "fieldtype": "Date",
+   "label": "Expected Completion Date"
+  },
+  {
+   "fieldname": "last_production_update",
+   "fieldtype": "Date",
+   "label": "Last Weekly Update",
+   "read_only": 1
+  },
+  {
+   "fieldname": "production_updates_section",
+   "fieldtype": "Section Break",
+   "label": "Weekly Updates"
+  },
+  {
+   "fieldname": "production_updates",
+   "fieldtype": "Table",
+   "label": "Weekly Updates",
+   "options": "Export Production Update"
+  },
+  {
+   "fieldname": "tab_logistics",
+   "fieldtype": "Tab Break",
+   "label": "Freight & Booking"
+  },
+  {
    "description": "Compare CHA quotes on price, transit time and free days -- SOP G.c.i.1-2",
    "fieldname": "freight_section",
    "fieldtype": "Section Break",
-   "label": "Freight & CHA Comparison"
+   "label": "Freight Comparison"
   },
   {
    "fieldname": "cha_quotes",
@@ -499,7 +942,96 @@
    "label": "Freight Remarks"
   },
   {
-   "depends_on": "eval:doc.stage_index >= 2",
+   "fieldname": "route_section",
+   "fieldtype": "Section Break",
+   "label": "Route & Additional Charges"
+  },
+  {
+   "fieldname": "route",
+   "fieldtype": "Data",
+   "label": "Route"
+  },
+  {
+   "fieldname": "transshipment_port",
+   "fieldtype": "Data",
+   "label": "Transshipment Port"
+  },
+  {
+   "default": "0",
+   "fieldname": "route_verified",
+   "fieldtype": "Check",
+   "label": "Route & Charges Verified"
+  },
+  {
+   "fieldname": "column_break_route_charges",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "haulage_required",
+   "fieldname": "inland_haulage_charges",
+   "fieldtype": "Currency",
+   "label": "Inland Haulage Charges",
+   "options": "freight_currency"
+  },
+  {
+   "fieldname": "destination_charges",
+   "fieldtype": "Currency",
+   "label": "Destination Charges",
+   "options": "freight_currency"
+  },
+  {
+   "fieldname": "special_country_charges",
+   "fieldtype": "Currency",
+   "label": "Special Country Charges",
+   "options": "freight_currency"
+  },
+  {
+   "fieldname": "booking_section",
+   "fieldtype": "Section Break",
+   "label": "Container Booking"
+  },
+  {
+   "fieldname": "booking_no",
+   "fieldtype": "Data",
+   "label": "Booking No"
+  },
+  {
+   "fieldname": "booking_date",
+   "fieldtype": "Date",
+   "label": "Booking Date"
+  },
+  {
+   "fieldname": "voyage_no",
+   "fieldtype": "Data",
+   "label": "Voyage No"
+  },
+  {
+   "fieldname": "column_break_booking",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cutoff_date",
+   "fieldtype": "Datetime",
+   "label": "Gate / Cargo Cut-off"
+  },
+  {
+   "fieldname": "si_cutoff",
+   "fieldtype": "Datetime",
+   "label": "SI Cut-off"
+  },
+  {
+   "fieldname": "vgm_cutoff",
+   "fieldtype": "Datetime",
+   "label": "VGM Cut-off"
+  },
+  {
+   "fieldname": "doc_cutoff",
+   "fieldtype": "Datetime",
+   "label": "Documentation Cut-off"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.stage_index >= 2",
    "description": "Dispatch planning, container booking, loading and e-sealing -- SOP G.c.i.3-7",
    "fieldname": "container_section",
    "fieldtype": "Section Break",
@@ -546,16 +1078,6 @@
    "label": "Shipping Line Seal No"
   },
   {
-   "fieldname": "e_seal_no",
-   "fieldtype": "Data",
-   "label": "E-Seal No"
-  },
-  {
-   "fieldname": "e_seal_date",
-   "fieldtype": "Date",
-   "label": "E-Sealed On"
-  },
-  {
    "fieldname": "column_break_weights",
    "fieldtype": "Column Break"
   },
@@ -589,7 +1111,8 @@
    "label": "Form 13 Received from CHA"
   },
   {
-   "depends_on": "eval:doc.stage_index >= 2",
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.stage_index >= 2",
    "description": "One row per container -- feeds the VGM, the invoice and the packing list",
    "fieldname": "containers_section",
    "fieldtype": "Section Break",
@@ -602,7 +1125,8 @@
    "options": "Export Container"
   },
   {
-   "depends_on": "eval:doc.stage_index >= 2",
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.stage_index >= 2",
    "description": "Detail lines for the packing list, grouped by container",
    "fieldname": "packing_section",
    "fieldtype": "Section Break",
@@ -615,11 +1139,17 @@
    "options": "Export Packing Item"
   },
   {
-   "depends_on": "eval:doc.stage_index >= 1",
+   "fieldname": "tab_documents",
+   "fieldtype": "Tab Break",
+   "label": "Documents"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.stage_index >= 1",
    "description": "Documents required by the customs department -- SOP G.c.i.5",
    "fieldname": "pre_shipment_section",
    "fieldtype": "Section Break",
-   "label": "Pre-Shipment Documents"
+   "label": "Pre-Shipment Document Checklist"
   },
   {
    "fieldname": "document_template",
@@ -634,7 +1164,52 @@
    "options": "Export Document Item"
   },
   {
-   "depends_on": "eval:doc.stage_index >= 4",
+   "fieldname": "cha_section",
+   "fieldtype": "Section Break",
+   "label": "CHA & Checklist"
+  },
+  {
+   "fieldname": "cha_docs_sent_on",
+   "fieldtype": "Date",
+   "label": "Documents Sent to CHA On"
+  },
+  {
+   "default": "Not Sent",
+   "fieldname": "cha_checklist_status",
+   "fieldtype": "Select",
+   "label": "Checklist Status",
+   "options": "\nNot Sent\nAwaiting Checklist\nUnder Review\nCorrections Sent\nApproved"
+  },
+  {
+   "fieldname": "cha_checklist",
+   "fieldtype": "Attach",
+   "label": "CHA Checklist"
+  },
+  {
+   "fieldname": "column_break_cha",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cha_checklist_approved_by",
+   "fieldtype": "Link",
+   "label": "Checklist Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cha_checklist_approved_on",
+   "fieldtype": "Date",
+   "label": "Checklist Approved On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cha_checklist_remarks",
+   "fieldtype": "Small Text",
+   "label": "Checklist Remarks"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.stage_index >= 4",
    "fieldname": "customs_section",
    "fieldtype": "Section Break",
    "label": "Shipping Bill"
@@ -648,6 +1223,12 @@
    "fieldname": "shipping_bill_date",
    "fieldtype": "Date",
    "label": "Shipping Bill Date"
+  },
+  {
+   "fieldname": "fob_value",
+   "fieldtype": "Currency",
+   "label": "FOB Value",
+   "options": "currency"
   },
   {
    "fieldname": "column_break_customs",
@@ -664,121 +1245,102 @@
    "label": "Let Export Order Date"
   },
   {
-   "depends_on": "eval:doc.stage_index >= 5",
-   "description": "Document set depends on the route -- SOP G.c.ii",
-   "fieldname": "post_shipment_section",
+   "fieldname": "examination_report",
+   "fieldtype": "Attach",
+   "label": "Examination Report"
+  },
+  {
+   "fieldname": "shipping_bill_attachment",
+   "fieldtype": "Attach",
+   "label": "Shipping Bill Copy"
+  },
+  {
+   "depends_on": "eval:doc.shipment_type != 'LCL'",
+   "fieldname": "eseal_section",
    "fieldtype": "Section Break",
-   "label": "Post-Shipment Documents"
+   "label": "E-Seal / RFID"
   },
   {
-   "fieldname": "post_shipment_documents",
-   "fieldtype": "Table",
-   "label": "Post-Shipment Documents",
-   "options": "Export Document Item"
-  },
-  {
-   "depends_on": "eval:doc.stage_index >= 5",
-   "fieldname": "coo_bl_section",
-   "fieldtype": "Section Break",
-   "label": "Certificate of Origin & Bill of Lading"
-  },
-  {
-   "default": "Not Applicable",
-   "fieldname": "coo_type",
-   "fieldtype": "Select",
-   "label": "Certificate of Origin Type",
-   "options": "Not Applicable\nMACCIA / Federation\nISFTA (India Sri-Lanka FTA)\nCCVO (Nigeria)"
-  },
-  {
-   "fieldname": "coo_no",
+   "fieldname": "e_seal_no",
    "fieldtype": "Data",
-   "label": "COO No"
+   "label": "E-Seal No"
   },
   {
-   "fieldname": "coo_date",
+   "fieldname": "e_seal_date",
    "fieldtype": "Date",
-   "label": "COO Date"
+   "label": "E-Sealed On"
   },
   {
-   "fieldname": "column_break_bl",
+   "fieldname": "e_seal_provider",
+   "fieldtype": "Data",
+   "label": "Seal Provider / Site"
+  },
+  {
+   "fieldname": "column_break_eseal",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "bl_type",
-   "fieldtype": "Select",
-   "label": "Bill of Lading Type",
-   "options": "\nSeaway Bill of Lading (Telex BL)\nOriginal BL"
-  },
-  {
-   "fieldname": "bl_no",
+   "fieldname": "e_seal_container_no",
    "fieldtype": "Data",
-   "label": "BL / AWB No"
+   "label": "E-Sealed Container No"
   },
   {
-   "fieldname": "bl_date",
-   "fieldtype": "Date",
-   "label": "BL / AWB Date"
+   "fieldname": "e_seal_attachment",
+   "fieldtype": "Attach",
+   "label": "E-Seal Confirmation"
   },
   {
-   "depends_on": "eval:doc.bl_type=='Original BL'",
-   "fieldname": "bl_courier_no",
-   "fieldtype": "Data",
-   "label": "Courier No (Original BL)"
-  },
-  {
-   "depends_on": "eval:doc.bl_type=='Original BL'",
-   "fieldname": "bl_courier_date",
-   "fieldtype": "Date",
-   "label": "Couriered On"
-  },
-  {
-   "depends_on": "eval:doc.stage_index >= 2",
-   "fieldname": "insurance_section",
+   "fieldname": "eway_section",
    "fieldtype": "Section Break",
-   "label": "Insurance"
+   "label": "E-Way Bill"
   },
   {
-   "default": "0",
-   "fieldname": "insurance_required",
-   "fieldtype": "Check",
-   "label": "Insurance Applicable"
-  },
-  {
-   "depends_on": "insurance_required",
-   "fieldname": "insurance_company",
+   "fieldname": "eway_bill_no",
    "fieldtype": "Data",
-   "label": "Insurance Company"
+   "label": "E-Way Bill No"
   },
   {
-   "depends_on": "insurance_required",
-   "fieldname": "insurance_premium_requested_on",
+   "fieldname": "eway_bill_date",
    "fieldtype": "Date",
-   "label": "Premium Request Raised to Accounts"
+   "label": "E-Way Bill Date"
   },
   {
-   "fieldname": "column_break_insurance",
+   "fieldname": "eway_validity_date",
+   "fieldtype": "Date",
+   "label": "Valid Upto"
+  },
+  {
+   "fieldname": "column_break_eway",
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "insurance_required",
-   "fieldname": "insurance_premium_paid_on",
-   "fieldtype": "Date",
-   "label": "Premium Paid On"
-  },
-  {
-   "depends_on": "insurance_required",
-   "fieldname": "insurance_policy_no",
+   "fieldname": "vehicle_no",
    "fieldtype": "Data",
-   "label": "Policy No"
+   "label": "Vehicle No"
   },
   {
-   "depends_on": "insurance_required",
-   "fieldname": "insurance_policy_date",
+   "fieldname": "transporter",
+   "fieldtype": "Data",
+   "label": "Transporter"
+  },
+  {
+   "fieldname": "lr_no",
+   "fieldtype": "Data",
+   "label": "LR No"
+  },
+  {
+   "fieldname": "lr_date",
    "fieldtype": "Date",
-   "label": "Policy Date"
+   "label": "LR Date"
   },
   {
-   "depends_on": "eval:doc.stage_index >= 2",
+   "fieldname": "eway_attachment",
+   "fieldtype": "Attach",
+   "label": "E-Way Bill Copy"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.stage_index >= 2",
    "description": "Who signs this shipment's documents, and the broker clearing it",
    "fieldname": "signatory_section",
    "fieldtype": "Section Break",
@@ -821,10 +1383,132 @@
    "label": "Broker ID Card Number"
   },
   {
-   "depends_on": "eval:doc.stage_index >= 6",
+   "fieldname": "tab_post_shipment",
+   "fieldtype": "Tab Break",
+   "label": "Post-Shipment"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.stage_index >= 5",
+   "description": "Document set depends on the route -- SOP G.c.ii",
+   "fieldname": "post_shipment_section",
+   "fieldtype": "Section Break",
+   "label": "Post-Shipment Document Checklist"
+  },
+  {
+   "fieldname": "post_shipment_documents",
+   "fieldtype": "Table",
+   "label": "Post-Shipment Documents",
+   "options": "Export Document Item"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.stage_index >= 5",
+   "fieldname": "coo_bl_section",
+   "fieldtype": "Section Break",
+   "label": "Certificate of Origin"
+  },
+  {
+   "default": "Not Applicable",
+   "fieldname": "coo_type",
+   "fieldtype": "Select",
+   "label": "Certificate of Origin Type",
+   "options": "Not Applicable\nMACCIA / Federation\nISFTA (India Sri-Lanka FTA)\nCCVO (Nigeria)"
+  },
+  {
+   "fieldname": "coo_no",
+   "fieldtype": "Data",
+   "label": "COO No"
+  },
+  {
+   "fieldname": "coo_date",
+   "fieldtype": "Date",
+   "label": "COO Date"
+  },
+  {
+   "fieldname": "coo_application_no",
+   "fieldtype": "Data",
+   "label": "COO Application No"
+  },
+  {
+   "fieldname": "coo_applied_on",
+   "fieldtype": "Date",
+   "label": "COO Applied On"
+  },
+  {
+   "default": "0",
+   "fieldname": "coo_payment_done",
+   "fieldtype": "Check",
+   "label": "COO Fee Paid"
+  },
+  {
+   "fieldname": "coo_attachment",
+   "fieldtype": "Attach",
+   "label": "COO Copy"
+  },
+  {
+   "fieldname": "bl_section",
+   "fieldtype": "Section Break",
+   "label": "Bill of Lading"
+  },
+  {
+   "fieldname": "bl_type",
+   "fieldtype": "Select",
+   "label": "Bill of Lading Type",
+   "options": "\nSeaway Bill of Lading (Telex BL)\nOriginal BL"
+  },
+  {
+   "fieldname": "bl_no",
+   "fieldtype": "Data",
+   "label": "BL / AWB No"
+  },
+  {
+   "fieldname": "bl_date",
+   "fieldtype": "Date",
+   "label": "BL / AWB Date"
+  },
+  {
+   "fieldname": "bl_attachment",
+   "fieldtype": "Attach",
+   "label": "BL Copy"
+  },
+  {
+   "fieldname": "column_break_bl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "draft_bl_received_on",
+   "fieldtype": "Date",
+   "label": "Draft BL Received On"
+  },
+  {
+   "fieldname": "draft_bl_sent_on",
+   "fieldtype": "Date",
+   "label": "Draft BL Sent to Client On"
+  },
+  {
+   "fieldname": "bl_client_approved_on",
+   "fieldtype": "Date",
+   "label": "Client Approved Draft BL On"
+  },
+  {
+   "depends_on": "eval:doc.bl_type=='Original BL'",
+   "fieldname": "bl_courier_no",
+   "fieldtype": "Data",
+   "label": "Courier No (Original BL)"
+  },
+  {
+   "depends_on": "eval:doc.bl_type=='Original BL'",
+   "fieldname": "bl_courier_date",
+   "fieldtype": "Date",
+   "label": "Couriered On"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.stage_index >= 6",
    "fieldname": "submission_section",
    "fieldtype": "Section Break",
-   "label": "Document Submission"
+   "label": "Submission to Bank / Client"
   },
   {
    "default": "0",
@@ -866,6 +1550,97 @@
    "label": "Submitted To (Bank / Client)"
   },
   {
+   "fieldname": "client_submission_section",
+   "fieldtype": "Section Break",
+   "label": "Sent to Client"
+  },
+  {
+   "fieldname": "docs_emailed_on",
+   "fieldtype": "Date",
+   "label": "Documents Emailed On"
+  },
+  {
+   "fieldname": "docs_emailed_to",
+   "fieldtype": "Data",
+   "label": "Emailed To",
+   "options": "Email"
+  },
+  {
+   "fieldname": "column_break_client_submission",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "client_acknowledged",
+   "fieldtype": "Check",
+   "label": "Client Acknowledged"
+  },
+  {
+   "depends_on": "client_acknowledged",
+   "fieldname": "client_ack_date",
+   "fieldtype": "Date",
+   "label": "Acknowledged On"
+  },
+  {
+   "fieldname": "originals_section",
+   "fieldtype": "Section Break",
+   "label": "Original Documents"
+  },
+  {
+   "default": "0",
+   "fieldname": "originals_required",
+   "fieldtype": "Check",
+   "label": "Original Documents Required"
+  },
+  {
+   "default": "0",
+   "depends_on": "originals_required",
+   "fieldname": "originals_address_confirmed",
+   "fieldtype": "Check",
+   "label": "Courier Address Confirmed"
+  },
+  {
+   "depends_on": "originals_required",
+   "fieldname": "courier_company",
+   "fieldtype": "Data",
+   "label": "Courier Company"
+  },
+  {
+   "depends_on": "originals_required",
+   "fieldname": "courier_tracking_no",
+   "fieldtype": "Data",
+   "label": "Tracking No"
+  },
+  {
+   "fieldname": "column_break_originals",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "originals_required",
+   "fieldname": "originals_dispatch_date",
+   "fieldtype": "Date",
+   "label": "Dispatched On"
+  },
+  {
+   "default": "Pending",
+   "depends_on": "originals_required",
+   "fieldname": "originals_delivery_status",
+   "fieldtype": "Select",
+   "label": "Delivery Status",
+   "options": "\nPending\nIn Transit\nDelivered"
+  },
+  {
+   "depends_on": "originals_required",
+   "fieldname": "originals_document_list",
+   "fieldtype": "Small Text",
+   "label": "Documents Couriered"
+  },
+  {
+   "fieldname": "tab_closure",
+   "fieldtype": "Tab Break",
+   "label": "Payment & Closure"
+  },
+  {
    "depends_on": "eval:doc.payment_route=='Through Letter of Credit'",
    "description": "LC acceptance and negotiation -- SOP G.c.ii.3.g",
    "fieldname": "lc_section",
@@ -881,6 +1656,11 @@
    "fieldname": "lc_issuing_bank",
    "fieldtype": "Data",
    "label": "LC Issuing Bank"
+  },
+  {
+   "fieldname": "lc_advising_bank",
+   "fieldtype": "Data",
+   "label": "Advising Bank"
   },
   {
    "fieldname": "lc_draft_received_on",
@@ -904,6 +1684,22 @@
    "fieldtype": "Column Break"
   },
   {
+   "fieldname": "lc_applicant",
+   "fieldtype": "Data",
+   "label": "Applicant"
+  },
+  {
+   "fieldname": "lc_beneficiary",
+   "fieldtype": "Data",
+   "label": "Beneficiary"
+  },
+  {
+   "fieldname": "lc_amount",
+   "fieldtype": "Currency",
+   "label": "LC Amount",
+   "options": "currency"
+  },
+  {
    "fieldname": "lc_acceptance_sent_on",
    "fieldtype": "Date",
    "label": "Acceptance Sent to Customer On"
@@ -924,12 +1720,18 @@
    "label": "Last Date of Shipment"
   },
   {
+   "fieldname": "lc_presentation_days",
+   "fieldtype": "Int",
+   "label": "Presentation Period (days)"
+  },
+  {
    "fieldname": "lc_payment_released_on",
    "fieldtype": "Date",
    "label": "Payment Released On"
   },
   {
-   "depends_on": "eval:doc.stage_index >= 1",
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.stage_index >= 1",
    "fieldname": "payment_section",
    "fieldtype": "Section Break",
    "label": "Payment"
@@ -975,7 +1777,17 @@
    "read_only": 1
   },
   {
-   "depends_on": "eval:doc.stage_index >= 8",
+   "fieldname": "closure_checklist_section",
+   "fieldtype": "Section Break",
+   "label": "Closure Checklist"
+  },
+  {
+   "fieldname": "closure_checklist_html",
+   "fieldtype": "HTML"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.stage_index >= 8",
    "description": "Cannot start before the final payment is received -- SOP I",
    "fieldname": "closure_section",
    "fieldtype": "Section Break",
@@ -1027,7 +1839,8 @@
    "label": "Closure Remarks"
   },
   {
-   "depends_on": "eval:doc.stage_index >= 11",
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.stage_index >= 11",
    "description": "Master Details handed to the consultant -- SOP J",
    "fieldname": "incentive_section",
    "fieldtype": "Section Break",
@@ -1077,16 +1890,6 @@
    "hidden": 1,
    "label": "Company Currency",
    "options": "Currency"
-  },
-  {
-   "fieldname": "remarks_section",
-   "fieldtype": "Section Break",
-   "label": "Remarks"
-  },
-  {
-   "fieldname": "remarks",
-   "fieldtype": "Small Text",
-   "label": "Remarks"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -1151,7 +1954,7 @@
    "write": 1
   }
  ],
- "search_fields": "sales_order,customer,shipping_bill_no",
+ "search_fields": "sales_order,customer,shipping_bill_no,bl_no",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

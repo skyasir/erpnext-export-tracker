@@ -19,6 +19,10 @@ def send_export_reminders():
 	blocks = []
 	blocks += quotation_followup_due(settings)
 	blocks += documents_pending_before_etd(settings)
+	blocks += cutoffs_approaching()
+	blocks += compliance_pending()
+	blocks += bl_approval_pending()
+	blocks += production_update_overdue()
 	blocks += lc_deadlines()
 	if sales_recipients:
 		send("Export Tracker: pending actions", blocks, sales_recipients)
@@ -107,6 +111,192 @@ def documents_pending_before_etd(settings):
 			"Pre-shipment documents not ready, ETD within {0} day(s)".format(days),
 			["Shipment", "Customer", "ETD", "Status", "Pending Docs"],
 			pending_rows,
+		)
+	]
+
+
+ACTIVE_STATES = [
+	"Order Confirmed",
+	"Indent Approved",
+	"Freight Finalised",
+	"Dispatch Planned",
+	"Customs Docs Prepared",
+	"Container Loaded",
+]
+
+
+def cutoffs_approaching(days=3):
+	"""Vessel, SI, VGM and documentation cut-offs -- SOP section 40.
+
+	A missed cut-off rolls the whole shipment to the next vessel, so this is the
+	one alert the desk cannot afford to read late.
+	"""
+	horizon = add_days(today(), days)
+	rows = frappe.get_all(
+		"Export Shipment",
+		filters={"status": ["in", ACTIVE_STATES]},
+		or_filters=[
+			["cutoff_date", "between", [today(), horizon]],
+			["si_cutoff", "between", [today(), horizon]],
+			["vgm_cutoff", "between", [today(), horizon]],
+			["doc_cutoff", "between", [today(), horizon]],
+		],
+		fields=["name", "customer_name", "booking_no", "cutoff_date", "si_cutoff", "vgm_cutoff",
+		        "doc_cutoff"],
+		limit=100,
+	)
+	if not rows:
+		return []
+
+	def when(value):
+		return formatdate(value) if value else "-"
+
+	return [
+		table(
+			"Cut-offs within {0} day(s)".format(days),
+			["Shipment", "Customer", "Booking", "Gate", "SI", "VGM", "Docs"],
+			[
+				[
+					link("Export Shipment", r.name),
+					r.customer_name or "",
+					r.booking_no or "-",
+					when(r.cutoff_date),
+					when(r.si_cutoff),
+					when(r.vgm_cutoff),
+					when(r.doc_cutoff),
+				]
+				for r in rows
+			],
+		)
+	]
+
+
+def compliance_pending():
+	"""Form M / BA and pre-shipment inspection -- SOP sections 9 and 16."""
+	blocks = []
+
+	form_m = frappe.get_all(
+		"Export Shipment",
+		filters={
+			"form_m_required": 1,
+			"form_m_no": ["is", "not set"],
+			"status": ["in", ACTIVE_STATES],
+		},
+		fields=["name", "customer_name", "destination_country", "etd"],
+		limit=100,
+	)
+	if form_m:
+		blocks.append(
+			table(
+				"Form M / BA number not yet received",
+				["Shipment", "Customer", "Destination", "ETD"],
+				[
+					[
+						link("Export Shipment", r.name),
+						r.customer_name or "",
+						r.destination_country or "-",
+						formatdate(r.etd) if r.etd else "-",
+					]
+					for r in form_m
+				],
+			)
+		)
+
+	inspection = frappe.get_all(
+		"Export Shipment",
+		filters={
+			"inspection_required": 1,
+			"inspection_status": ["!=", "Final Report"],
+			"status": ["in", ACTIVE_STATES],
+		},
+		fields=["name", "customer_name", "inspection_agency", "inspection_status", "etd"],
+		limit=100,
+	)
+	if inspection:
+		blocks.append(
+			table(
+				"Pre-shipment inspection not closed out",
+				["Shipment", "Customer", "Agency", "Stage", "ETD"],
+				[
+					[
+						link("Export Shipment", r.name),
+						r.customer_name or "",
+						r.inspection_agency or "-",
+						r.inspection_status or "Not Started",
+						formatdate(r.etd) if r.etd else "-",
+					]
+					for r in inspection
+				],
+			)
+		)
+
+	return blocks
+
+
+def bl_approval_pending(days=2):
+	"""Draft BL sent to the client and still unapproved -- SOP section 28."""
+	cutoff = add_days(today(), -days)
+	rows = frappe.get_all(
+		"Export Shipment",
+		filters={
+			"draft_bl_received_on": ["<=", cutoff],
+			"bl_client_approved_on": ["is", "not set"],
+			"status": ["not in", ["EBRC Generated"]],
+		},
+		fields=["name", "customer_name", "draft_bl_received_on", "draft_bl_sent_on"],
+		limit=100,
+	)
+	if not rows:
+		return []
+
+	return [
+		table(
+			"Draft BL awaiting client approval",
+			["Shipment", "Customer", "Draft Received", "Sent to Client"],
+			[
+				[
+					link("Export Shipment", r.name),
+					r.customer_name or "",
+					formatdate(r.draft_bl_received_on),
+					formatdate(r.draft_bl_sent_on) if r.draft_bl_sent_on else "-",
+				]
+				for r in rows
+			],
+		)
+	]
+
+
+def production_update_overdue(days=7):
+	"""The weekly readiness update -- SOP section 12 -- has gone stale."""
+	cutoff = add_days(today(), -days)
+	rows = frappe.get_all(
+		"Export Shipment",
+		filters={"status": ["in", ACTIVE_STATES]},
+		or_filters=[
+			["last_production_update", "<=", cutoff],
+			["last_production_update", "is", "not set"],
+		],
+		fields=["name", "customer_name", "production_status", "last_production_update",
+		        "expected_completion_date"],
+		limit=100,
+	)
+	if not rows:
+		return []
+
+	return [
+		table(
+			"Weekly production update overdue",
+			["Shipment", "Customer", "Production Status", "Last Update", "Expected Ready"],
+			[
+				[
+					link("Export Shipment", r.name),
+					r.customer_name or "",
+					r.production_status or "Not Started",
+					formatdate(r.last_production_update) if r.last_production_update else "never",
+					formatdate(r.expected_completion_date) if r.expected_completion_date else "-",
+				]
+				for r in rows
+			],
 		)
 	]
 

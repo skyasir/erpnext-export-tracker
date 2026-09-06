@@ -37,6 +37,7 @@ Sales Invoice EXP/### → the legal Export Invoice (own print format)
 | **Export Shipment** | The spine. 13-state workflow, CHA comparison, document checklists, LC, bank closure, incentive. |
 | **Export Indent** | SOP G.a — replaces the Excel indent. Production confirms technical details, then management approves. |
 | **Export Document Template** | Country/route-driven checklists. Nigeria pulls SONCAP + CCVO, Uganda SGS, Nepal/Bhutan LUT, Sri Lanka ISFTA. |
+| **Export Country Profile** | Per-destination compliance rules — inspection agency, Form M / BA, inland haulage, COO type, extra documents. Nothing about a destination is hard-coded; add a profile and shipments to it pick the rules up. |
 | **Export Tracker Settings** | IEC code, End Use Code, PAN, banker details, exporter block, reminder thresholds. |
 
 ## Workflow
@@ -56,6 +57,37 @@ client-side event and would not hold on API writes):
 - document submission requires the **management signature** (SOP G.c.ii.2.f.v)
 - **bank closure cannot start until the invoice is fully paid** (SOP I)
 - EBRC requires the XAR and the completed bank submission
+
+Each gate is declared once, in `requirements_for(state)`, and that same list
+feeds both `validate()` and the panel on the form — so the form can never
+promise something the gate will refuse.
+
+## The form
+
+Thirteen states and ~290 fields only work if the desk can see where it is, so the
+shipment form is built around two things.
+
+**The next-step panel** sits at the top of every shipment: the current stage, a
+progress bar, the name of the workflow button to press next, and exactly what is
+still missing for it. Blocking items are what `validate()` will refuse; the
+recommended ones are what the SOP asks for but is not worth losing your work
+over — an unverified route, a missing e-way bill, a draft BL the client has not
+signed off. Each line has a **go** link that jumps to the field, and skipped
+recommendations follow the shipment forward instead of disappearing.
+
+**Seven tabs** — Overview, Compliance, Production, Freight & Booking, Documents,
+Post-Shipment, Payment & Closure. Sections used to *hide* until the shipment
+reached their stage, which meant a gate could demand a field the user could not
+see; they are collapsible now and simply open themselves as the stage arrives.
+
+Three buttons do the work that used to be manual:
+
+- **Compare Freight Quotes** — the SOP's three-forwarder table side by side, with
+  the cheapest and fastest tagged, and one click to pick the winner.
+- **Add Weekly Update** — the production readiness update as a small dialog
+  rather than a child-table row.
+- **Download Document Pack** — zips every file attached to the shipment, foldered
+  pre-shipment / post-shipment / shipment.
 
 ## Print formats
 
@@ -82,12 +114,24 @@ printed total always equals ERPNext's grand total.
 - **Export Incentive Master Details** — the consultant handoff sheet (SOP J), exportable to Excel
 - **Export Quotation Follow-up** — SOP D/E
 
+## Export Control Tower
+
+The workspace opens on eleven live counters grouped the way the SOP groups them —
+commercial, payment, production, logistics, compliance, documentation, closure —
+over a bar chart of shipments by stage. Quotations pending, indents awaiting
+approval, production not ready, outstanding value, freight not selected, booking
+not made, Form M pending, inspection open, shipping bill pending, draft BLs
+awaiting the client, and shipments waiting to close.
+
 ## Reminders
 
 A daily scheduler job emails the sales role (quotation follow-ups, documents not
-ready before ETD, LC deadlines) and the accounts role (XAR pending after payment,
-EBRC pending after XAR, realisation window closing). Every alert is also a
-report, so a missing SMTP account costs you the email, never the information.
+ready before ETD, **vessel / SI / VGM / documentation cut-offs within three
+days**, **Form M and inspection still open**, **draft BLs the client has not
+approved**, **weekly production updates gone stale**, LC deadlines) and the
+accounts role (XAR pending after payment, EBRC pending after XAR, realisation
+window closing). Every alert is also a report, so a missing SMTP account costs
+you the email, never the information.
 
 ## Documentation
 
@@ -111,6 +155,11 @@ troubleshooting.
 4. **CHA suppliers** — the `CHA` supplier group exists; add your clearing agents to it.
 5. **Document templates** — the install seeds one per route plus country templates
    for Nigeria, Uganda, Nepal, Bhutan and Sri Lanka. Adjust to taste.
+6. **Country profiles** — the install seeds Nigeria, Uganda, Malawi, Nepal, Bhutan
+   and Sri Lanka. Add one for any new destination: tick what it needs (inspection,
+   Form M / BA, inland haulage), name the agency, list its extra documents. New
+   shipments to that country pick the rules up; shipments already in flight keep
+   the flags they started with, so a rule added today cannot strand them.
 
 ## Scope note
 
@@ -123,6 +172,12 @@ itself stays manual.
 
 Frappe/ERPNext v15 and v16. Only `validate()` + `frappe.throw`, `db_set` and
 standard doc events are used; no version-specific APIs.
+
+If the site has ever had **Customize Form** opened on Export Shipment, frappe
+stores a `field_order` property setter that outranks the app's own layout and
+would pin the old single-column form. `patches/resync_form_layout.py` rebuilds
+that list from the app's order, splicing any site custom fields back in after
+whatever they were anchored to.
 
 ## Licence
 

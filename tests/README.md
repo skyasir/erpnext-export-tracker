@@ -14,31 +14,34 @@ cd <bench>/sites
 |---|---|
 | `uat_core.py` | auto-create on export SO submit, no-create for domestic, CHA comparison + selection gates, country-driven checklist, every stage gate, the EXP invoice series and charge build-up, the Export Invoice print content, payment → XAR → bank → EBRC chain, Export Indent approval sequence, all 10 print formats, all 6 reports, cancel protection, reminder job |
 | `test_print_formats.py` | every print format resolves to a template on disk, every template is registered, each `doc_type` matches its JSON fixture, and each format actually renders — catches the two causes of "No Preview Available" |
-| `test_section_visibility.py` | proves the progressive section-disclosure rules cannot deadlock the workflow: every field a gate demands sits in a section already visible at the stage the action is taken from |
+| `test_form_guidance.py` | the form can always tell the user what it wants and never hides it: no section is stage-gated out of existence, every tab has content, every requirement the panel reports names a real field, the panel's next action matches the workflow's own transitions, and the panel's blocking list is exactly what `validate()` refuses |
 | `test_export_documents.py` | rebuilds a real 3-container shipment and checks the five documents we issue, their arithmetic, package numbering, and that no print format exists for the three third-party documents |
 | `uat_routes_and_hooks.py` | the LC route gates, the Through Bank document set, part-shipment, the Delivery Note hook, advance-against-order payment, Payment Entry / Sales Invoice cancel paths, the invoice→shipment fallback lookup, the remaining country templates, reports with rows actually in them, PDF generation |
 
-## Before running: set the site constants
+## Site constants resolve themselves
 
-Both scripts have a block of constants near the top that are **specific to the
-site** — customer, item, warehouse, income account, cost centre, debtors and bank
-account. Change them to match your chart of accounts or the scripts will fail
-with `LinkValidationError`.
+The scripts prefer the documented names — `Sundry Debtors - Corporate - SEPL`,
+`Sales Account - Cages - SEPL - SEPL`, `P1 - Central / Main Store - SEPL` and so
+on — and fall back to any live record matching the same filters when the site has
+moved on. Chart-of-accounts restructuring, a disabled warehouse or an item that
+stopped being a stock item used to read as a test failure; now it does not.
 
 ```python
-CUSTOMER = "..."
-ITEM = "..."
-COMPANY = "..."
-WAREHOUSE = "..."
-INCOME = "..."
-COST_CENTER = "..."
-DEBIT_TO = "..."
-BANK = "..."
+def pick(doctype, preferred, filters):
+	for name in preferred:
+		# the preference has to satisfy the same filters -- an account that has
+		# since become a group account still "exists" but cannot be posted to
+		if frappe.db.get_value(doctype, dict(filters, name=name), "name"):
+			return name
+	return frappe.db.get_value(doctype, filters, "name")
 ```
+
+Each run prints what it resolved. Edit the preference lists if you want a
+specific account rather than whichever one matches.
 
 ## `uat_routes_and_hooks.py` does NOT fully roll back
 
-`uat_core.py` and `test_section_visibility.py` roll back cleanly. **`uat_routes_and_hooks.py`
+`uat_core.py` and `test_form_guidance.py` roll back cleanly. **`uat_routes_and_hooks.py`
 does not** — it submits and cancels stock and accounting documents, and ERPNext
 commits internally during those, so `frappe.db.rollback()` cannot undo them.
 
@@ -58,16 +61,29 @@ delete documents you wanted. It also removes orphaned GL and Stock Ledger
 entries; because that last step uses raw SQL and bypasses the `Bin` cache, run
 `repost_stock(item, warehouse)` for any item the tests moved.
 
-## Editing a print format JSON? Bump `modified`
+## Editing a fixture JSON? Bump `modified`
 
 Frappe compares a standard fixture's `modified` timestamp against the database
-and **skips the import when they match**. Editing `doc_type` (or anything else) in
-a print format's `.json` therefore does nothing on migrate until you also bump
-`modified`. Renaming a format is worse: the new name imports as a *new* record and
-the old one is left behind pointing at a template that no longer exists, which the
-UI reports as **"No Preview Available"**.
+and **skips the import when they match** — or when the database copy is newer,
+which it will be on any site where someone has touched the record.
 
-`test_print_formats.py` fails on both.
+- **Print formats.** Editing `doc_type` (or anything else) does nothing on
+  migrate until you bump `modified`. Renaming is worse: the new name imports as a
+  *new* record and the old one is left behind pointing at a template that no
+  longer exists, which the UI reports as **"No Preview Available"**.
+  `test_print_formats.py` fails on both.
+- **Workspaces.** The same trap, and it is silent — the dashboard simply keeps
+  the old layout. `test_form_guidance.py` compares the live `content` against the
+  shipped fixture and fails if they have drifted.
+
+## Number Cards name themselves from `label`
+
+Setting `name` on a new Number Card is ignored — it takes its name from `label`.
+A workspace block referencing a name that does not exist renders an **empty
+card**, with no error anywhere. `test_form_guidance.py` checks every card block
+resolves, that its query runs, and that a `Count` card is not returning the
+unfiltered row count (which is what you get if `filters_json` never reaches
+`get_result`).
 
 ## Known environment dependencies
 
@@ -89,4 +105,4 @@ UI reports as **"No Preview Available"**.
   save, which exercises the `validate()` gates but not the Actions menu or the
   per-transition `allowed` role. Everything runs as Administrator.
 - **Visual fidelity of the printed output** against the department's sheet.
-- **v16** — only run on v15 so far.
+- **v16** — the suites pass on frappe 16.30 / erpnext 16.31 as well as v15.
