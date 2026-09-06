@@ -7,12 +7,15 @@
  "field_order": [
   "week_ending",
   "production_status",
+  "packing_status",
+  "column_break_progress",
   "qty_completed",
   "qty_pending",
-  "packing_status",
   "expected_completion_date",
-  "updated_by",
-  "remarks"
+  "notes_section",
+  "remarks",
+  "column_break_notes",
+  "updated_by"
  ],
  "fields": [
   {
@@ -34,33 +37,48 @@
    "reqd": 1
   },
   {
-   "columns": 1,
+   "columns": 2,
+   "fieldname": "packing_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Packing Status",
+   "options": "\nNot Started\nIn Progress\nCompleted"
+  },
+  {
+   "fieldname": "column_break_progress",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 2,
    "fieldname": "qty_completed",
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Qty Completed"
   },
   {
-   "columns": 1,
+   "columns": 2,
    "fieldname": "qty_pending",
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Qty Pending"
   },
   {
-   "columns": 2,
-   "fieldname": "packing_status",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Packing Status",
-   "options": "Not Started\nIn Progress\nCompleted"
-  },
-  {
-   "columns": 2,
    "fieldname": "expected_completion_date",
    "fieldtype": "Date",
-   "in_list_view": 1,
    "label": "Expected Completion"
+  },
+  {
+   "fieldname": "notes_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "column_break_notes",
+   "fieldtype": "Column Break"
   },
   {
    "fieldname": "updated_by",
@@ -68,17 +86,12 @@
    "label": "Updated By",
    "options": "User",
    "read_only": 1
-  },
-  {
-   "fieldname": "remarks",
-   "fieldtype": "Small Text",
-   "label": "Remarks"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-09-06 10:00:00.000000",
+ "modified": "2026-09-06 14:10:00.000000",
  "modified_by": "Administrator",
  "module": "Export Tracker",
  "name": "Export Production Update",

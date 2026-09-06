@@ -450,21 +450,24 @@ Send the shipment details to your clearing agents and collect freight quotes.
 ### Step 6.2 — Enter them side by side
 **Who:** Sales User · **Where:** Export Shipment → *Freight & Booking* → **Freight Comparison**
 
-One row per forwarder. The SOP's comparison table is the row editor (click the
-pencil); the grid shows the axes you actually decide on.
+One row per forwarder. The **grid carries the five things you decide on**;
+everything the SOP's comparison table asks for is in the row editor (click the
+pencil) and in the Compare dialog below.
 
-| Column | Meaning |
+| In the grid | |
 |---|---|
-| Forwarder / CHA | the supplier |
-| Quote Date, Currency, Container Type | what they quoted, and for what |
-| **Ocean / Air Freight** | base freight — *in the grid* |
-| Local Charges, THC, Documentation, Haulage, Other Charges | the rest of the SOP's charge lines — row editor |
-| **Landed Total** | *in the grid* — every charge line added up, computed for you |
-| Vessel, ETD, ETA | their schedule; **ETD** is in the grid |
-| **Transit Days** | *in the grid* — *SOP G.c.i.2.b* |
-| **Free Days** | *in the grid* — free days for unloading at destination, *SOP G.c.i.2.c* |
+| **Forwarder / CHA** | the supplier |
+| **Landed Total** | every charge line added up, computed for you |
+| **Transit Days** | *SOP G.c.i.2.b* |
+| **Free Days** | free days for unloading at destination, *SOP G.c.i.2.c* |
 | **Selected** | tick the winner |
-| Remarks | anything worth remembering |
+
+| In the row editor | |
+|---|---|
+| Quote Date, Currency, Container Type | what they quoted, and for what |
+| Charges | Ocean / Air Freight, Local Charges, THC, Documentation, Haulage, Other Charges — the SOP's charge lines, totalled into Landed Total as you type |
+| Schedule & Terms | Vessel, ETD, ETA, Transit Days, Free Days |
+| Decision | Selected, Remarks |
 
 The whole quote history stays on the shipment for the next negotiation.
 

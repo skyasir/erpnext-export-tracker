@@ -105,17 +105,73 @@ for doctype in ("Export Shipment", "Export Indent", "Export Document Template",
 		check("%s / %s holds %s full width" % (doctype, sec, tables[0]), not breaks,
 		      "column breaks in the section: %s" % (breaks or "none"))
 
+# ---------------------------------------------------------------- child grids
+# A grid gets 10 column units. Overrun and the last columns fall off; a 1-unit
+# column is roughly 12 characters wide, so a longer label truncates its own
+# header. And the row editor is a narrow dialog -- a section split into three
+# columns, or one whose columns are lopsided, reflows badly.
+#
+# Budget and truncation are checked against the live meta, because a site's
+# custom fields do not change them. Column balance is checked against the JSON
+# the app ships: how a site chooses to arrange its own Customize Form additions
+# is the site's business, not a defect in the app.
+print("\n=== child tables: grid budget and row-editor balance ===")
+import json  # noqa: E402
+import os  # noqa: E402
+
+APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CHILD_TABLES = [
+	df.options
+	for dt in ("Export Shipment", "Export Indent", "Export Document Template",
+	           "Export Country Profile")
+	for df in frappe.get_meta(dt).fields
+	if df.fieldtype == "Table"
+]
+
+for table in sorted(set(CHILD_TABLES)):
+	tmeta = frappe.get_meta(table)
+	shown = [df for df in tmeta.fields if df.in_list_view]
+	used = sum(df.columns or 0 for df in shown)
+	check("%-28s grid fits in 10 units" % table, used <= 10, "uses %d" % used)
+
+	cramped = [df.fieldname for df in shown if (df.columns or 0) <= 1
+	           and len(df.label or "") > 11]
+	check("%-28s no truncated grid headers" % table, not cramped, cramped or "none")
+
+	# columns per section, from the shipped fixture rather than the live meta
+	path = os.path.join(
+		APP, "erpnext_export_tracker/export_tracker/doctype",
+		frappe.scrub(table), frappe.scrub(table) + ".json",
+	)
+	if not os.path.exists(path):
+		continue
+	fixture = json.load(open(path))
+	section, columns = None, {}
+	for df in fixture["fields"]:
+		if df["fieldtype"] == "Section Break":
+			section, columns[section] = df["fieldname"], [0]
+		elif df["fieldtype"] == "Column Break":
+			columns.setdefault(section, [0]).append(0)
+		else:
+			columns.setdefault(section, [0])[-1] += 1
+
+	for sec, counts in columns.items():
+		name = "%s / %s" % (table, sec or "(first)")
+		check("%-40s at most 2 columns" % name, len(counts) <= 2,
+		      "%d columns" % len(counts))
+		if len(counts) == 2 and sum(counts):
+			# one field beside four is the lopsided case that reflows badly
+			check("%-40s columns are balanced" % name, abs(counts[0] - counts[1]) <= 2,
+			      "%s vs %s fields" % (counts[0], counts[1]))
+
 # ---------------------------------------------------------------- workspace
 # Frappe skips a fixture whose `modified` matches the database, so a workspace
 # edited without bumping that timestamp silently never lands.
 print("\n=== the control tower actually synced ===")
-import json  # noqa: E402
-import os  # noqa: E402
-
 shipped = json.load(
 	open(
 		os.path.join(
-			os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+			APP,
 			"erpnext_export_tracker/export_tracker/workspace/export_tracker/export_tracker.json",
 		)
 	)

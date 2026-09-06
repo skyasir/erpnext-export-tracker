@@ -7,6 +7,7 @@
  "field_order": [
   "cha",
   "quote_date",
+  "column_break_details",
   "currency",
   "container_type",
   "charges_section",
@@ -17,7 +18,6 @@
   "documentation_charges",
   "haulage_charges",
   "other_charges",
-  "column_break_total",
   "total_amount",
   "schedule_section",
   "vessel",
@@ -28,11 +28,12 @@
   "free_days",
   "decision_section",
   "is_selected",
+  "column_break_decision",
   "remarks"
  ],
  "fields": [
   {
-   "columns": 2,
+   "columns": 3,
    "fieldname": "cha",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -44,6 +45,10 @@
    "fieldname": "quote_date",
    "fieldtype": "Date",
    "label": "Quote Date"
+  },
+  {
+   "fieldname": "column_break_details",
+   "fieldtype": "Column Break"
   },
   {
    "fieldname": "currency",
@@ -62,10 +67,8 @@
    "label": "Charges"
   },
   {
-   "columns": 1,
    "fieldname": "freight_amount",
    "fieldtype": "Currency",
-   "in_list_view": 1,
    "label": "Ocean / Air Freight",
    "options": "currency"
   },
@@ -104,11 +107,9 @@
    "options": "currency"
   },
   {
-   "fieldname": "column_break_total",
-   "fieldtype": "Column Break"
-  },
-  {
+   "bold": 1,
    "columns": 2,
+   "description": "Every charge line added up",
    "fieldname": "total_amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
@@ -119,7 +120,7 @@
   {
    "fieldname": "schedule_section",
    "fieldtype": "Section Break",
-   "label": "Schedule"
+   "label": "Schedule & Terms"
   },
   {
    "fieldname": "vessel",
@@ -127,10 +128,8 @@
    "label": "Vessel"
   },
   {
-   "columns": 1,
    "fieldname": "etd",
    "fieldtype": "Date",
-   "in_list_view": 1,
    "label": "ETD"
   },
   {
@@ -143,14 +142,15 @@
    "fieldtype": "Column Break"
   },
   {
-   "columns": 1,
+   "columns": 2,
    "fieldname": "transit_days",
    "fieldtype": "Int",
    "in_list_view": 1,
    "label": "Transit Days"
   },
   {
-   "columns": 1,
+   "columns": 2,
+   "description": "Free days for unloading at destination",
    "fieldname": "free_days",
    "fieldtype": "Int",
    "in_list_view": 1,
@@ -164,10 +164,15 @@
   {
    "columns": 1,
    "default": "0",
+   "description": "Only one quote can win",
    "fieldname": "is_selected",
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Selected"
+  },
+  {
+   "fieldname": "column_break_decision",
+   "fieldtype": "Column Break"
   },
   {
    "fieldname": "remarks",
@@ -178,7 +183,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-09-06 10:00:00.000000",
+ "modified": "2026-09-06 14:10:00.000000",
  "modified_by": "Administrator",
  "module": "Export Tracker",
  "name": "Export CHA Quote",
