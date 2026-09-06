@@ -212,6 +212,20 @@ check("every shortcut block has a shortcut row",
       declared <= {s.label for s in ws.shortcuts},
       declared - {s.label for s in ws.shortcuts})
 
+# The card block, the workspace child row's label and the Number Card's own name
+# are one and the same string. Shortening any of them for looks unlinks the card
+# and it renders as nothing at all, with no error.
+row_labels = {c.label for c in ws.number_cards}
+check("every card block has a matching workspace row", set(cards) <= row_labels,
+      set(cards) - row_labels)
+check("every card row label equals its card name",
+      all(c.label == c.number_card_name for c in ws.number_cards),
+      [(c.label, c.number_card_name) for c in ws.number_cards
+       if c.label != c.number_card_name])
+check("every Number Card's own label equals its name",
+      all(frappe.db.get_value("Number Card", n, "label") == n for n in cards),
+      [n for n in cards if frappe.db.get_value("Number Card", n, "label") != n])
+
 # ---------------------------------------------------------------- live
 print("\n=== live: the panel and the gate agree ===")
 from frappe.utils import add_days, today  # noqa: E402
