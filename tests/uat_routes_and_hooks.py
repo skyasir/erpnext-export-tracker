@@ -25,16 +25,44 @@ def expect_throw(label, fn):
 
 frappe.init(site="supreme.localhost")
 frappe.connect()
+
+
+def pick(doctype, preferred, filters):
+	"""The first preferred name that still exists here, else anything matching.
+
+	The chart of accounts and the warehouse tree get restructured between
+	releases. A pinned name that has since been renamed reads as a test failure
+	when it is really site housekeeping, so prefer the documented name and fall
+	back to a live one.
+	"""
+	for name in preferred:
+		# the preference has to satisfy the same filters -- an account that has
+		# since become a group account still "exists" but cannot be posted to
+		if frappe.db.get_value(doctype, dict(filters, name=name), "name"):
+			return name
+	return frappe.db.get_value(doctype, filters, "name")
+
 frappe.set_user("Administrator")
 
 CUSTOMER = "A1 Poultry Farm"
-ITEM = "SE-AO-FS-300011"
+# this suite books a Delivery Note, so the item has to be a stock item -- the one
+# the SOP examples use stopped being one when the site reorganised its item master
+ITEM = pick("Item", ["SE-AO-FS-300011"],
+	{"is_stock_item": 1, "disabled": 0, "has_variants": 0, "is_sales_item": 1})
 COMPANY = "Supreme Equipments Pvt Ltd"
 WAREHOUSE = "P1 - Central / Main Store - SEPL"
-INCOME = "Sales Account - Cages - SEPL - SEPL"
+if frappe.db.get_value("Warehouse", WAREHOUSE, "disabled") != 0:
+	WAREHOUSE = frappe.db.get_value(
+		"Warehouse", {"company": COMPANY, "is_group": 0, "disabled": 0}, "name"
+	)
+INCOME = pick("Account", ["Sales Account - Cages - SEPL - SEPL", "Sales Export - SEPL"],
+	{"company": COMPANY, "root_type": "Income", "is_group": 0})
 COST_CENTER = "Main - SEPL"
-DEBIT_TO = "Sundry Debtors - Corporate - SEPL"
-BANK = "KOTAK MAHINDRA BANK OD NO. - 6396 - SEPL"
+DEBIT_TO = pick("Account", ["Sundry Debtors - Corporate - SEPL",
+	"Sundry Debtors - Cages - Corporate - SEPL"],
+	{"company": COMPANY, "account_type": "Receivable", "is_group": 0})
+BANK = pick("Account", ["KOTAK MAHINDRA BANK OD NO. - 6396 - SEPL"],
+	{"company": COMPANY, "account_type": "Bank", "is_group": 0})
 
 
 def new_export_so(qty=100, rate=10):
@@ -86,6 +114,7 @@ ship.status = "Dispatch Planned"
 ship.save()
 for row in ship.pre_shipment_documents:
 	row.prepared = 1
+ship.shipment_type = "FCL"          # mandatory from the SOP revision (section 21)
 ship.status = "Customs Docs Prepared"
 ship.save()
 ship.loading_date = today()

@@ -1,5 +1,6 @@
 import frappe
 from frappe import _
+from frappe.utils import getdate
 
 
 def execute(filters=None):
@@ -53,14 +54,32 @@ def get_data(filters):
 	if filters.get("hide_closed"):
 		conditions["status"] = ["!=", "EBRC Generated"]
 
-	return frappe.get_all(
+	rows = frappe.get_all(
 		"Export Shipment",
 		filters=conditions,
 		fields=[
 			"name", "status", "customer", "destination_country", "payment_route", "sales_order",
 			"sales_invoice", "selected_cha", "etd", "eta", "shipping_bill_no", "bl_no",
 			"invoice_amount", "outstanding_amount", "payment_status", "xar_no", "ebrc_no",
-			"currency",
+			"currency", "creation",
 		],
-		order_by="coalesce(etd, creation) desc",
+		# v16 rejects an expression here ("Invalid field format in Order By"), so
+		# the coalesce that put undated shipments alongside dated ones is done in
+		# Python instead of SQL
+		order_by="creation desc",
 	)
+	return by_etd_then_creation(rows)
+
+
+def by_etd_then_creation(rows):
+	"""Newest first, the ETD standing in for the creation date where there is one.
+
+	This used to be `coalesce(etd, creation) desc` in SQL; v16 refuses an
+	expression in order_by, so the same ordering happens here.
+	"""
+	ordered = sorted(
+		rows, key=lambda r: getdate(r.get("etd") or r.get("creation")), reverse=True
+	)
+	for row in ordered:
+		row.pop("creation", None)
+	return ordered

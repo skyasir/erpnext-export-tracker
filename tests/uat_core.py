@@ -25,6 +25,23 @@ def expect_throw(label, fn):
 
 frappe.init(site="supreme.localhost")
 frappe.connect()
+
+
+def pick(doctype, preferred, filters):
+	"""The first preferred name that still exists here, else anything matching.
+
+	The chart of accounts and the warehouse tree get restructured between
+	releases. A pinned name that has since been renamed reads as a test failure
+	when it is really site housekeeping, so prefer the documented name and fall
+	back to a live one.
+	"""
+	for name in preferred:
+		# the preference has to satisfy the same filters -- an account that has
+		# since become a group account still "exists" but cannot be posted to
+		if frappe.db.get_value(doctype, dict(filters, name=name), "name"):
+			return name
+	return frappe.db.get_value(doctype, filters, "name")
+
 frappe.set_user("Administrator")
 frappe.flags.in_test = True
 
@@ -32,9 +49,16 @@ CUSTOMER = "A1 Poultry Farm"
 ITEM = "SE-AO-FS-300011"
 COMPANY = "Supreme Equipments Pvt Ltd"
 WAREHOUSE = "P1 - Central / Main Store - SEPL"
-INCOME = "Sales Account - Cages - SEPL - SEPL"
+if frappe.db.get_value("Warehouse", WAREHOUSE, "disabled") != 0:
+	WAREHOUSE = frappe.db.get_value(
+		"Warehouse", {"company": COMPANY, "is_group": 0, "disabled": 0}, "name"
+	)
+INCOME = pick("Account", ["Sales Account - Cages - SEPL - SEPL", "Sales Export - SEPL"],
+	{"company": COMPANY, "root_type": "Income", "is_group": 0})
 COST_CENTER = "Main - SEPL"
-DEBIT_TO = "Sundry Debtors - Corporate - SEPL"
+DEBIT_TO = pick("Account", ["Sundry Debtors - Corporate - SEPL",
+	"Sundry Debtors - Cages - Corporate - SEPL"],
+	{"company": COMPANY, "account_type": "Receivable", "is_group": 0})
 
 print("\n=== 1. Sales Order with Is Export -> auto-create shipment ===")
 so = frappe.new_doc("Sales Order")
@@ -140,7 +164,12 @@ check("SGS certificate pulled in for Uganda", "SGS Certificate" in pre, pre)
 check("pre + post rows loaded", len(pre) == 11 and len(post) == 5,
       "%d pre / %d post" % (len(pre), len(post)))
 
-print("\n=== 5. document-completion gate (SOP G.c.i.5) ===")
+print("\n=== 5. destination compliance (SOP sections 2C and 16) ===")
+check("Uganda profile switched inspection on", ship.inspection_required == 1)
+check("inspection agency came from the profile", ship.inspection_agency == "SGS",
+      ship.inspection_agency)
+
+print("\n=== 5b. document-completion gate (SOP G.c.i.5) ===")
 ship.dispatch_plan_date = today()
 ship.status = "Dispatch Planned"
 ship.save()
@@ -150,6 +179,22 @@ expect_throw("blocked: customs docs stage with unprepared documents", ship.save)
 ship.reload()
 for row in ship.pre_shipment_documents:
 	row.prepared = 1
+ship.status = "Customs Docs Prepared"
+expect_throw("blocked: customs docs stage without a shipment type", ship.save)
+
+ship.reload()
+for row in ship.pre_shipment_documents:
+	row.prepared = 1
+ship.shipment_type = "FCL"
+ship.status = "Customs Docs Prepared"
+expect_throw("blocked: customs docs stage with the inspection still open", ship.save)
+
+ship.reload()
+for row in ship.pre_shipment_documents:
+	row.prepared = 1
+ship.shipment_type = "FCL"
+ship.inspection_status = "Final Report"
+ship.inspection_report_no = "SGS/UG/2026/0041"
 ship.status = "Customs Docs Prepared"
 ship.save()
 check("customs docs stage passes when all prepared", ship.status == "Customs Docs Prepared")
@@ -269,8 +314,12 @@ for qty, rate in ((700, 3.46), (10000, 0.42), (600, 3.20), (600, 3.66),
 		"income_account": INCOME, "cost_center": COST_CENTER, "warehouse": WAREHOUSE,
 	})
 
-FREIGHT_ACC = "Clearing & Forwarding Charges -Export - SEPL"
-INSURANCE_ACC = "Insurance Charges - SEPL"
+FREIGHT_ACC = pick("Account", ["Clearing & Forwarding Charges -Export - SEPL",
+	"Clearing & Forwarding Charges -Export - RD - SEPL"],
+	{"company": COMPANY, "is_group": 0, "name": ["like", "%Forwarding%Export%"]})
+INSURANCE_ACC = pick("Account", ["Insurance Charges - SEPL",
+	"Marine Insurance - Export - SEPL"],
+	{"company": COMPANY, "is_group": 0, "name": ["like", "%Insurance%"]})
 for desc, amount, acc in (
 	("LOCAL TRANSPORTATION AND FREIGHT UPTO MOMBASA PORT", 3350, FREIGHT_ACC),
 	("SGS CHARGES", 290, FREIGHT_ACC),

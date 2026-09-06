@@ -47,6 +47,8 @@ def after_install():
 	make_workflow_masters()
 	make_workflow()
 	make_document_templates()
+	make_country_profiles()
+	make_dashboard()
 	frappe.db.commit()
 
 
@@ -518,3 +520,248 @@ def upsert_template(name, rows, destination_country=None, payment_route="Any", i
 		)
 
 	doc.insert(ignore_permissions=True)
+
+
+# ----------------------------------------------------------------------
+# country profiles -- SOP section 2C: nothing about a destination is hard-coded
+# ----------------------------------------------------------------------
+COUNTRY_PROFILES = {
+	"Nigeria": {
+		"inspection_required": 1,
+		"inspection_agency": "SONCAP",
+		"form_m_required": 1,
+		"coo_type": "CCVO (Nigeria)",
+		"special_requirement": (
+			"The buyer opens Form M and the BA number before shipment. "
+			"SONCAP inspection applies; the CCVO goes with the post-shipment set."
+		),
+	},
+	"Uganda": {
+		"inspection_required": 1,
+		"inspection_agency": "SGS",
+		"special_requirement": "SGS pre-export verification of conformity applies.",
+	},
+	"Malawi": {
+		"haulage_required": 1,
+		"special_requirement": (
+			"Landlocked. Cargo is trucked from the discharge port to site -- "
+			"capture the haulage leg and its charges separately."
+		),
+	},
+	"Nepal": {"special_requirement": "Letter of Undertaking travels with the pre-shipment set."},
+	"Bhutan": {"special_requirement": "Letter of Undertaking travels with the pre-shipment set."},
+	"Sri Lanka": {
+		"coo_type": "ISFTA (India Sri-Lanka FTA)",
+		"special_requirement": "ISFTA preferential certificate of origin applies.",
+	},
+}
+
+
+def make_country_profiles():
+	"""Seed a profile for each destination the app already knew about, so the
+	rules that used to live in COUNTRY_EXTRAS become editable records."""
+	for country, values in COUNTRY_PROFILES.items():
+		if not frappe.db.exists("Country", country):
+			continue
+		if frappe.db.exists("Export Country Profile", country):
+			continue
+
+		doc = frappe.new_doc("Export Country Profile")
+		doc.country = country
+		doc.update(values)
+		for document_name, is_required, responsibility, stage in COUNTRY_EXTRAS.get(country, []):
+			doc.append(
+				"documents",
+				{
+					"document_name": document_name,
+					"stage": stage,
+					"is_required": is_required,
+					"responsibility": responsibility,
+				},
+			)
+		doc.insert(ignore_permissions=True)
+
+
+# ----------------------------------------------------------------------
+# export control tower -- SOP section 39
+# ----------------------------------------------------------------------
+OPEN_STATES = [
+	"Order Confirmed",
+	"Indent Approved",
+	"Freight Finalised",
+	"Dispatch Planned",
+	"Customs Docs Prepared",
+	"Container Loaded",
+]
+
+# (name, doctype, filters, function, aggregate field, colour)
+NUMBER_CARDS = [
+	(
+		"Export Quotations Pending",
+		"Quotation",
+		[
+			["Quotation", "custom_is_export", "=", 1],
+			["Quotation", "docstatus", "=", 1],
+			["Quotation", "status", "not in", ["Ordered", "Lost", "Closed", "Expired"]],
+		],
+		"Count",
+		None,
+		"#7575ff",
+	),
+	(
+		"Export Indent Approval Pending",
+		"Export Indent",
+		[["Export Indent", "management_approved", "=", 0]],
+		"Count",
+		None,
+		"#ffa00a",
+	),
+	(
+		"Export Production Pending",
+		"Export Shipment",
+		[
+			["Export Shipment", "status", "in", OPEN_STATES],
+			["Export Shipment", "production_status", "not in", ["Ready", "Dispatch Planning"]],
+		],
+		"Count",
+		None,
+		"#ffa00a",
+	),
+	(
+		"Export Freight Selection Pending",
+		"Export Shipment",
+		[
+			["Export Shipment", "status", "in", ["Order Confirmed", "Indent Approved"]],
+			["Export Shipment", "selected_cha", "is", "not set"],
+		],
+		"Count",
+		None,
+		"#29cd42",
+	),
+	(
+		"Export Booking Pending",
+		"Export Shipment",
+		[
+			["Export Shipment", "status", "in", OPEN_STATES],
+			["Export Shipment", "booking_no", "is", "not set"],
+		],
+		"Count",
+		None,
+		"#29cd42",
+	),
+	(
+		"Export Form M Pending",
+		"Export Shipment",
+		[
+			["Export Shipment", "form_m_required", "=", 1],
+			["Export Shipment", "form_m_no", "is", "not set"],
+		],
+		"Count",
+		None,
+		"#cb2929",
+	),
+	(
+		"Export Inspection Pending",
+		"Export Shipment",
+		[
+			["Export Shipment", "inspection_required", "=", 1],
+			["Export Shipment", "inspection_status", "!=", "Final Report"],
+		],
+		"Count",
+		None,
+		"#cb2929",
+	),
+	(
+		"Export Shipping Bill Pending",
+		"Export Shipment",
+		[
+			["Export Shipment", "status", "in", ["Customs Docs Prepared", "Container Loaded"]],
+			["Export Shipment", "shipping_bill_no", "is", "not set"],
+		],
+		"Count",
+		None,
+		"#ff5858",
+	),
+	(
+		"Export BL Approval Pending",
+		"Export Shipment",
+		[
+			["Export Shipment", "draft_bl_received_on", "is", "set"],
+			["Export Shipment", "bl_client_approved_on", "is", "not set"],
+		],
+		"Count",
+		None,
+		"#ff5858",
+	),
+	(
+		"Export Payment Outstanding",
+		"Export Shipment",
+		[["Export Shipment", "payment_status", "!=", "Fully Paid"]],
+		"Sum",
+		"outstanding_amount",
+		"#cb2929",
+	),
+	(
+		"Export Closure Pending",
+		"Export Shipment",
+		[
+			[
+				"Export Shipment",
+				"status",
+				"in",
+				["Docs Submitted", "Payment Received", "XAR Generated", "Bank Submission Done"],
+			]
+		],
+		"Count",
+		None,
+		"#7575ff",
+	),
+]
+
+STAGE_CHART = "Export Shipments by Stage"
+
+
+def make_dashboard():
+	"""Number cards and the stage chart behind the Export Tracker workspace."""
+	for name, doctype, filters, function, based_on, colour in NUMBER_CARDS:
+		if frappe.db.exists("Number Card", name):
+			continue
+		card = frappe.new_doc("Number Card")
+		card.update(
+			{
+				# a Number Card names itself from its label, so the label has to be
+				# the full name the workspace references -- and the "Export" prefix
+				# keeps it from colliding with another app's "Payment Outstanding"
+				"label": name,
+				"type": "Document Type",
+				"document_type": doctype,
+				"function": function,
+				"aggregate_function_based_on": based_on,
+				"filters_json": frappe.as_json(filters),
+				"is_public": 1,
+				"show_percentage_change": 0,
+				"color": colour,
+				"module": MODULE,
+			}
+		)
+		card.insert(ignore_permissions=True)
+
+	if not frappe.db.exists("Dashboard Chart", STAGE_CHART):
+		frappe.get_doc(
+			{
+				"doctype": "Dashboard Chart",
+				"name": STAGE_CHART,
+				"chart_name": STAGE_CHART,
+				"chart_type": "Group By",
+				"document_type": "Export Shipment",
+				"group_by_type": "Count",
+				"group_by_based_on": "status",
+				"type": "Bar",
+				"timeseries": 0,
+				"filters_json": "[]",
+				"dynamic_filters_json": "[]",
+				"is_public": 1,
+				"number_of_groups": 13,
+				"module": MODULE,
+			}
+		).insert(ignore_permissions=True)

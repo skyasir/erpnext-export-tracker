@@ -1,0 +1,90 @@
+{
+ "actions": [],
+ "creation": "2026-09-06 10:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "week_ending",
+  "production_status",
+  "qty_completed",
+  "qty_pending",
+  "packing_status",
+  "expected_completion_date",
+  "updated_by",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "week_ending",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Week Ending",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "default": "In Production",
+   "fieldname": "production_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Production Status",
+   "options": "Not Started\nIn Production\nPartially Ready\nReady\nDispatch Planning",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "qty_completed",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty Completed"
+  },
+  {
+   "columns": 1,
+   "fieldname": "qty_pending",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty Pending"
+  },
+  {
+   "columns": 2,
+   "fieldname": "packing_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Packing Status",
+   "options": "Not Started\nIn Progress\nCompleted"
+  },
+  {
+   "columns": 2,
+   "fieldname": "expected_completion_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Expected Completion"
+  },
+  {
+   "fieldname": "updated_by",
+   "fieldtype": "Link",
+   "label": "Updated By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-09-06 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Export Tracker",
+ "name": "Export Production Update",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

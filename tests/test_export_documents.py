@@ -13,14 +13,44 @@ def check(label, cond, detail=""):
 
 frappe.init(site="supreme.localhost")
 frappe.connect()
+
+
+def pick(doctype, preferred, filters):
+	"""The first preferred name that still exists here, else anything matching.
+
+	The chart of accounts and the warehouse tree get restructured between
+	releases. A pinned name that has since been renamed reads as a test failure
+	when it is really site housekeeping, so prefer the documented name and fall
+	back to a live one.
+	"""
+	for name in preferred:
+		# the preference has to satisfy the same filters -- an account that has
+		# since become a group account still "exists" but cannot be posted to
+		if frappe.db.get_value(doctype, dict(filters, name=name), "name"):
+			return name
+	return frappe.db.get_value(doctype, filters, "name")
+
 frappe.set_user("Administrator")
 
 CUSTOMER, ITEM, COMPANY = "A1 Poultry Farm", "SE-AO-FS-300011", "Supreme Equipments Pvt Ltd"
 WAREHOUSE = "P1 - Central / Main Store - SEPL"
-INCOME, COST_CENTER = "Sales Account - Cages - SEPL - SEPL", "Main - SEPL"
-DEBIT_TO = "Sundry Debtors - Corporate - SEPL"
-FREIGHT_ACC = "Clearing & Forwarding Charges -Export - SEPL"
-INSURANCE_ACC = "Insurance Charges - SEPL"
+if frappe.db.get_value("Warehouse", WAREHOUSE, "disabled") != 0:
+	WAREHOUSE = frappe.db.get_value(
+		"Warehouse", {"company": COMPANY, "is_group": 0, "disabled": 0}, "name"
+	)
+INCOME = pick("Account", ["Sales Account - Cages - SEPL - SEPL", "Sales Export - SEPL"],
+	{"company": COMPANY, "root_type": "Income", "is_group": 0})
+COST_CENTER = pick("Cost Center", ["Main - SEPL"],
+	{"company": COMPANY, "is_group": 0})
+DEBIT_TO = pick("Account", ["Sundry Debtors - Corporate - SEPL",
+	"Sundry Debtors - Cages - Corporate - SEPL"],
+	{"company": COMPANY, "account_type": "Receivable", "is_group": 0})
+FREIGHT_ACC = pick("Account", ["Clearing & Forwarding Charges -Export - SEPL",
+	"Clearing & Forwarding Charges -Export - RD - SEPL"],
+	{"company": COMPANY, "is_group": 0, "name": ["like", "%Forwarding%Export%"]})
+INSURANCE_ACC = pick("Account", ["Insurance Charges - SEPL",
+	"Marine Insurance - Export - SEPL"],
+	{"company": COMPANY, "is_group": 0, "name": ["like", "%Insurance%"]})
 
 so = frappe.new_doc("Sales Order")
 so.customer, so.company, so.currency, so.conversion_rate = CUSTOMER, COMPANY, "USD", 93.0
