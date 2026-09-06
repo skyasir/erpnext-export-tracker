@@ -1,3 +1,4 @@
+{%- set company_gstin = frappe.db.get_value("Address", doc.company_address, "gstin") if doc.company_address else "" -%}
 {%- set s = frappe.get_doc("Export Tracker Settings") -%}
 {%- set company = frappe.get_doc("Company", doc.company) -%}
 {%- set cur = doc.currency -%}
@@ -43,7 +44,7 @@
 		</td>
 		<td colspan="3">
 			IEC Code: {{ s.iec_code or "" }}<br>
-			GSTIN/UIN: {{ doc.company_gstin or "" }}<br>
+			GSTIN/UIN: {{ company_gstin or "" }}<br>
 			End Use Code: {{ s.end_use_code or "" }}<br>
 			PAN No.: {{ s.pan_no or "" }}
 		</td>
@@ -55,12 +56,12 @@
 	</tr>
 	<tr>
 		<td colspan="3">
-			<span class="b">{{ txt(doc.custom_consignee_name or doc.customer_name) }}</span><br>
-			{{ blk(doc.custom_consignee_address or doc.address_display) }}
+			<span class="b">{{ txt(doc.consignee_name or doc.customer_name) }}</span><br>
+			{{ blk(doc.consignee_address or doc.address_display) }}
 		</td>
 		<td colspan="3">
-			<span class="b">{{ txt(doc.custom_buyer_name or doc.custom_consignee_name or doc.customer_name) }}</span><br>
-			{{ blk(doc.custom_buyer_address or doc.custom_consignee_address) }}
+			<span class="b">{{ txt(doc.buyer_name or doc.consignee_name or doc.customer_name) }}</span><br>
+			{{ blk(doc.buyer_address or doc.consignee_address) }}
 		</td>
 	</tr>
 
@@ -71,10 +72,10 @@
 	</tr>
 	<tr>
 		<td class="ctr" colspan="2">{{ doc.incoterm or "" }} {{ doc.named_place or "" }}</td>
-		<td class="ctr" colspan="2">{{ doc.custom_terms_of_payment or doc.payment_terms_template or "" }}</td>
+		<td class="ctr" colspan="2">{{ doc.terms_of_payment or doc.terms_of_payment or "" }}</td>
 		<td class="ctr" colspan="2">
-			{{ doc.custom_port_of_discharge or "" }}
-			{% if doc.custom_final_destination %} / {{ doc.custom_final_destination }}{% endif %}
+			{{ doc.port_of_discharge or "" }}
+			{% if doc.final_destination %} / {{ doc.final_destination }}{% endif %}
 		</td>
 	</tr>
 	<tr>

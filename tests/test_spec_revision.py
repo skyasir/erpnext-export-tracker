@@ -108,53 +108,91 @@ else:
 	check("a fully paid shipment exists to fetch against", False, "none on this site")
 
 # ---------------------------------------------------------------- proforma
-print("\n=== 5. proforma invoice, then the order ===")
+print("\n=== 5. proforma invoice: domestic and export ===")
 CUSTOMER = frappe.db.get_value("Customer", {"disabled": 0}, "name")
 ITEM = frappe.db.get_value("Item", {"disabled": 0, "is_sales_item": 1,
                                     "has_variants": 0, "is_stock_item": 1}, "name")
-pi = frappe.new_doc("Export Proforma Invoice")
-pi.customer = CUSTOMER
-pi.company = COMPANY
-pi.currency = "USD"
-pi.conversion_rate = 93
-pi.pi_date = today()
-pi.incoterm = "CIF"
-pi.named_place = "APAPA PORT, LAGOS"
-pi.consignee_name = "ROYAL AGRO NIGERIA LTD."
-pi.consignee_address = "Plot 14, Apapa, Lagos"
-pi.port_of_discharge = "APAPA PORT, LAGOS"
-pi.final_destination = "NIGERIA"
-pi.country_of_final_destination = "NIGERIA"
-pi.terms_of_payment = "IRREVOCABLE LC AT SIGHT"
-pi.freight_charges = 2830
-pi.insurance_charges = 260
-pi.append("items", {"item_code": ITEM, "qty": 10, "rate": 100, "currency": "USD"})
-pi.insert()
-check("proforma totals itself", pi.net_total == 1000 and pi.grand_total == 4090,
-      "net %s grand %s" % (pi.net_total, pi.grand_total))
-check("FOB defaults to the net total", pi.fob_value == 1000, pi.fob_value)
+WAREHOUSE = frappe.db.get_value("Warehouse", {"company": COMPANY, "is_group": 0,
+                                              "disabled": 0}, "name")
+pi_meta = frappe.get_meta("Proforma Invoice")
+check("named just Proforma Invoice", not frappe.db.exists("DocType", "Export Proforma Invoice"))
+check("uses the Sales Order item table", pi_meta.get_field("items").options == "Sales Order Item")
+check("uses the Sales Order tax table",
+      pi_meta.get_field("taxes").options == "Sales Taxes and Charges")
+check("export block is a gated tab, not the whole document",
+      [f.depends_on for f in pi_meta.fields if f.fieldname == "tab_export"] == ["is_export"])
+
+
+def build(is_export):
+	pi = frappe.new_doc("Proforma Invoice")
+	pi.customer = CUSTOMER
+	pi.company = COMPANY
+	pi.transaction_date = today()
+	pi.currency = "INR" if not is_export else "USD"
+	pi.conversion_rate = 1 if not is_export else 93
+	pi.is_export = 1 if is_export else 0
+	if is_export:
+		pi.incoterm = "CIF"
+		pi.named_place = "APAPA PORT, LAGOS"
+		pi.consignee_name = "ROYAL AGRO NIGERIA LTD."
+		pi.consignee_address = "Plot 14, Apapa, Lagos"
+		pi.port_of_discharge = "APAPA PORT, LAGOS"
+		pi.final_destination = "NIGERIA"
+		pi.country_of_final_destination = "NIGERIA"
+		pi.terms_of_payment = "IRREVOCABLE LC AT SIGHT"
+	pi.append("items", {"item_code": ITEM, "qty": 10, "rate": 100,
+	                    "delivery_date": add_days(today(), 30), "warehouse": WAREHOUSE})
+	pi.insert()
+	return pi
+
+
+# --- domestic
+dom = build(is_export=False)
+check("a domestic proforma saves with no export details", dom.name and not dom.is_export)
+check("domestic totals like an order", dom.total == 1000 and dom.grand_total == 1000,
+      "total %s grand %s" % (dom.total, dom.grand_total))
+check("amount in words is filled", bool(dom.in_words), dom.in_words)
+check("rows are Sales Order Items", dom.items[0].doctype == "Sales Order Item")
+
+# --- export
+pi = build(is_export=True)
+check("an export proforma keeps its consignee", pi.consignee_name == "ROYAL AGRO NIGERIA LTD.")
 check("buyer copies the consignee", pi.buyer_name == "ROYAL AGRO NIGERIA LTD.")
+check("base totals convert at the rate", pi.base_grand_total == 93000, pi.base_grand_total)
+
+pi_no_consignee = frappe.new_doc("Proforma Invoice")
+pi_no_consignee.update({"customer": CUSTOMER, "company": COMPANY, "is_export": 1,
+                        "transaction_date": today(), "currency": "USD",
+                        "conversion_rate": 93})
+pi_no_consignee.append("items", {"item_code": ITEM, "qty": 1, "rate": 10,
+                                 "delivery_date": add_days(today(), 30),
+                                 "warehouse": WAREHOUSE})
+throws("an export proforma without a consignee is refused", pi_no_consignee.insert)
 
 throws("order refused before the proforma is submitted", pi.make_sales_order)
 pi.submit()
+check("status follows the document", pi.status == "Submitted", pi.status)
 
 so = pi.make_sales_order()
 so.delivery_date = add_days(today(), 30)
 for row in so.items:
 	row.delivery_date = add_days(today(), 30)
-	row.warehouse = frappe.db.get_value("Warehouse", {"company": COMPANY, "is_group": 0,
-	                                                  "disabled": 0}, "name")
+	row.warehouse = WAREHOUSE
 so.insert()
+check("items copy straight across",
+      len(so.items) == 1 and so.items[0].item_code == pi.items[0].item_code
+      and so.items[0].qty == pi.items[0].qty and so.items[0].rate == pi.items[0].rate)
+check("the order totals the same", so.grand_total == pi.grand_total,
+      "%s vs %s" % (so.grand_total, pi.grand_total))
 check("order carries the export block across",
       so.custom_consignee_name == "ROYAL AGRO NIGERIA LTD."
       and so.custom_port_of_discharge == "APAPA PORT, LAGOS"
       and so.custom_is_export == 1)
 check("order carries the incoterm and named place",
       so.incoterm == "CIF" and so.named_place == "APAPA PORT, LAGOS")
-check("order points back at the proforma", so.custom_proforma_invoice == pi.name,
-      so.custom_proforma_invoice)
+check("order points back at the proforma", so.custom_proforma_invoice == pi.name)
 check("proforma points at its order",
-      frappe.db.get_value("Export Proforma Invoice", pi.name, "sales_order") == so.name)
+      frappe.db.get_value("Proforma Invoice", pi.name, "sales_order") == so.name)
 
 pi.reload()
 pi.consignee_name = "ROYAL AGRO NIGERIA PLC."
@@ -162,6 +200,21 @@ pi.save()
 so.reload()
 check("editing the proforma updates the draft order",
       so.custom_consignee_name == "ROYAL AGRO NIGERIA PLC.", so.custom_consignee_name)
+check("status turns to Ordered",
+      frappe.db.get_value("Proforma Invoice", pi.name, "status") == "Ordered",
+      frappe.db.get_value("Proforma Invoice", pi.name, "status"))
+
+# --- a domestic proforma raises a domestic order
+dom.submit()
+dom_so = dom.make_sales_order()
+check("a domestic order is not flagged as export", not dom_so.get("custom_is_export"))
+
+for doc, label in ((pi, "export"), (dom, "domestic")):
+	try:
+		out = frappe.get_print("Proforma Invoice", doc.name, print_format="Proforma Invoice")
+		check("the %s proforma prints" % label, len(out) > 500, "%d chars" % len(out))
+	except Exception as e:
+		check("the %s proforma prints" % label, False, repr(e)[:120])
 
 print("\n" + "=" * 62)
 print("PASSED: %d    FAILED: %d" % (len(PASS), len(FAIL)))

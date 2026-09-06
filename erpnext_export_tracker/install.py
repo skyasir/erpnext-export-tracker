@@ -321,7 +321,7 @@ def get_custom_fields():
 				"fieldname": "custom_proforma_invoice",
 				"label": "Proforma Invoice",
 				"fieldtype": "Link",
-				"options": "Export Proforma Invoice",
+				"options": "Proforma Invoice",
 				"insert_after": "custom_terms_of_payment",
 				"read_only": 1,
 				"description": "The proforma this order was raised from",

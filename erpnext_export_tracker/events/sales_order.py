@@ -14,8 +14,17 @@ def after_insert(doc, method=None):
 	proforma's later edits to find their way across.
 	"""
 	pi = doc.get("custom_proforma_invoice")
-	if pi and not frappe.db.get_value("Export Proforma Invoice", pi, "sales_order"):
-		frappe.db.set_value("Export Proforma Invoice", pi, "sales_order", doc.name)
+	if not pi or frappe.db.get_value("Proforma Invoice", pi, "sales_order"):
+		return
+
+	# written straight to the row rather than through the document: the proforma
+	# is submitted by now, and its status is derived from this link, so both move
+	# together
+	frappe.db.set_value(
+		"Proforma Invoice", pi,
+		{"sales_order": doc.name, "status": "Ordered"},
+		update_modified=False,
+	)
 
 
 def on_submit(doc, method=None):
