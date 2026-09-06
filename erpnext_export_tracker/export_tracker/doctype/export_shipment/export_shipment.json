@@ -5,10 +5,10 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "tab_overview",
   "naming_series",
   "status",
   "stage_index",
-  "tab_overview",
   "guidance_section",
   "next_step_html",
   "links_section",
@@ -296,6 +296,11 @@
  ],
  "fields": [
   {
+   "fieldname": "tab_overview",
+   "fieldtype": "Tab Break",
+   "label": "Overview"
+  },
+  {
    "default": "EXP-SHP-.YYYY.-",
    "fieldname": "naming_series",
    "fieldtype": "Select",
@@ -322,11 +327,6 @@
    "label": "Stage Index",
    "no_copy": 1,
    "read_only": 1
-  },
-  {
-   "fieldname": "tab_overview",
-   "fieldtype": "Tab Break",
-   "label": "Overview"
   },
   {
    "fieldname": "guidance_section",
