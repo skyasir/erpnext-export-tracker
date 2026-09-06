@@ -38,6 +38,7 @@ Sales Invoice EXP/### → the legal Export Invoice (own print format)
 | **Export Shipment** | The spine. 13-state workflow, CHA comparison, document checklists, LC, bank closure, incentive. |
 | **Export Indent** | SOP G.a — replaces the Excel indent. Production confirms technical details, then management approves. |
 | **Export Document Template** | Country/route-driven checklists. Nigeria pulls SONCAP + CCVO, Uganda SGS, Nepal/Bhutan LUT, Sri Lanka ISFTA. |
+| **Export Proforma Invoice** | The commercial offer, and the earlier document: a submitted proforma raises the Sales Order, which raises the shipment. Export details edited on it flow to the linked order. |
 | **Export Country Profile** | Per-destination compliance rules — inspection agency, Form M / BA, inland haulage, COO type, extra documents. Nothing about a destination is hard-coded; add a profile and shipments to it pick the rules up. |
 | **Export Tracker Settings** | IEC code, End Use Code, PAN, banker details, exporter block, reminder thresholds. |
 
@@ -76,8 +77,10 @@ over — an unverified route, a missing e-way bill, a draft BL the client has no
 signed off. Each line has a **go** link that jumps to the field, and skipped
 recommendations follow the shipment forward instead of disappearing.
 
-**Seven tabs** — Overview, Compliance, Production, Freight & Booking, Documents,
-Post-Shipment, Payment & Closure. Sections used to *hide* until the shipment
+**Eight tabs** — Overview, Compliance, Production, Payment, Freight & Booking,
+Documents, Post-Shipment, Closure. The next-step panel is not one of their fields:
+it is drawn between the tab bar and the tab content, so it stays on screen
+whichever tab you are on. Sections used to *hide* until the shipment
 reached their stage, which meant a gate could demand a field the user could not
 see; they are collapsible now and simply open themselves as the stage arrives.
 
@@ -87,6 +90,11 @@ Three buttons do the work that used to be manual:
   the cheapest and fastest tagged, and one click to pick the winner.
 - **Add Weekly Update** — the production readiness update as a small dialog
   rather than a child-table row.
+- **Fetch Payments** — pulls every submitted receipt booked against the order or
+  the invoice into the payments table. XAR number and date are captured against
+  the payment they belong to, so an invoice settled in parts carries an XAR for
+  each, and an advance XAR can be reused on a later one. Only shown for a
+  non-INR receipt.
 - **Download Document Pack** — zips every file attached to the shipment, foldered
   pre-shipment / post-shipment / shipment.
 

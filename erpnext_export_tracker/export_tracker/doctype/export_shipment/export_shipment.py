@@ -73,9 +73,11 @@ class ExportShipment(Document):
 		self.sync_containers()
 		self.number_packages()
 		self.roll_up_production()
+		self.roll_up_xar()
 		self.update_payment_status()
 		self.stamp_management_signature()
 		self.stamp_cha_checklist()
+		self.validate_cha_details()
 		self.stage_index = self.state_index()
 		self.stamp_stage_dates()
 		self.validate_state_requirements()
@@ -96,7 +98,6 @@ class ExportShipment(Document):
 				"company",
 				"currency",
 				"incoterm",
-				"named_place",
 				"grand_total",
 			],
 			as_dict=True,
@@ -109,7 +110,6 @@ class ExportShipment(Document):
 		self.company = self.company or so.company
 		self.currency = self.currency or so.currency
 		self.incoterm = self.incoterm or so.incoterm
-		self.named_place = self.named_place or so.named_place
 
 		if not self.company_currency and self.company:
 			self.company_currency = frappe.db.get_value("Company", self.company, "default_currency")
@@ -263,6 +263,81 @@ class ExportShipment(Document):
 		self.expected_completion_date = latest.expected_completion_date
 		self.last_production_update = latest.week_ending
 
+	def roll_up_xar(self):
+		"""The payments table owns the XAR numbers; the shipment keeps the first
+		one as a read-only summary.
+
+		An invoice settled in parts carries an XAR per receipt, so there is no
+		single shipment XAR any more. Keeping the earliest on the parent is what
+		lets the XAR Generated workflow state, its gate and the Bank Closure
+		Ageing report go on working, including for shipments that predate the
+		table and still hold their own value.
+		"""
+		dated = [r for r in self.payments if r.xar_no]
+		if not dated:
+			return
+
+		first = min(dated, key=lambda r: (getdate(r.xar_date) if r.xar_date else getdate(today()), r.idx))
+		self.xar_no = first.xar_no
+		self.xar_date = first.xar_date
+
+	@frappe.whitelist()
+	def fetch_payments(self):
+		"""Pull every submitted receipt booked against this shipment's order or
+		invoice into the payments table -- SOP section 12's Fetch Payments.
+
+		Rows already listed are left alone, so pressing it twice adds nothing and
+		never overwrites an XAR somebody has typed. The row currency defaults to
+		the shipment's, because that is the currency the proceeds are realised in
+		and what decides whether an XAR is owed -- the payment entry itself is
+		often booked against an INR debtors account even for a dollar invoice.
+		"""
+		targets = [t for t in (self.sales_order, self.sales_invoice) if t]
+		if not targets:
+			frappe.throw(_("Link a Sales Order or an Export Invoice first."))
+
+		rows = frappe.db.sql(
+			"""
+			select pe.name as payment_entry, pe.posting_date, pe.reference_no,
+			       ref.reference_doctype, ref.reference_name, ref.allocated_amount
+			from `tabPayment Entry` pe
+			inner join `tabPayment Entry Reference` ref on ref.parent = pe.name
+			where pe.docstatus = 1
+			  and pe.payment_type = 'Receive'
+			  and ref.reference_doctype in ('Sales Order', 'Sales Invoice')
+			  and ref.reference_name in %(targets)s
+			order by pe.posting_date, pe.name
+			""",
+			{"targets": targets},
+			as_dict=True,
+		)
+
+		known = {r.payment_entry for r in self.payments if r.payment_entry}
+		added = 0
+		for row in rows:
+			if row.payment_entry in known:
+				continue
+			self.append(
+				"payments",
+				{
+					"payment_entry": row.payment_entry,
+					"payment_date": row.posting_date,
+					"amount": row.allocated_amount,
+					"currency": self.currency,
+					"bank_reference": row.reference_no,
+					"payment_type": "Advance"
+					if row.reference_doctype == "Sales Order"
+					else "Against Invoice",
+					"sales_invoice": row.reference_name
+					if row.reference_doctype == "Sales Invoice"
+					else None,
+				},
+			)
+			known.add(row.payment_entry)
+			added += 1
+
+		return {"added": added, "found": len(rows)}
+
 	# ------------------------------------------------------------------
 	# payment -- drives the bank closure gate
 	# ------------------------------------------------------------------
@@ -309,6 +384,34 @@ class ExportShipment(Document):
 		elif not self.management_signed:
 			self.management_signed_by = None
 			self.management_signed_on = None
+
+	def validate_cha_details(self):
+		"""Nothing goes to the CHA until we know which CHA -- SOP section 1.
+
+		The trigger is the act of forwarding, not a workflow stage: the moment a
+		sent-on date or a checklist status past "Not Sent" is recorded, the CHA
+		and the broker who will file must already be named.
+		"""
+		forwarded = bool(self.cha_docs_sent_on) or self.cha_checklist_status not in (
+			None, "", "Not Sent",
+		)
+		if not forwarded:
+			return
+
+		missing = [
+			label
+			for label, value in (
+				(_("Selected CHA"), self.selected_cha),
+				(_("Customs Broker / Courier"), self.customs_broker_name),
+			)
+			if not value
+		]
+		if missing:
+			frappe.throw(
+				_("Enter the CHA details before forwarding documents to the CHA. "
+				  "Missing: {0}").format(", ".join(missing)),
+				title=_("CHA details required"),
+			)
 
 	def stamp_cha_checklist(self):
 		"""Who approved the CHA checklist, and when -- SOP section 24."""
@@ -921,7 +1024,6 @@ def create_export_shipment(sales_order, guard_duplicates=False):
 	doc.company = so.company
 	doc.currency = so.currency
 	doc.incoterm = so.incoterm
-	doc.named_place = so.named_place
 	doc.status = STATE_ORDER[0]
 
 	# CIF / CIP put the insurance obligation on us

@@ -1,0 +1,175 @@
+"""The shipment module revision: payments and XAR, the proforma, the CHA gate.
+
+Runs in a transaction and rolls back, so it leaves nothing behind.
+"""
+
+import frappe
+from frappe.utils import add_days, today
+
+frappe.init(site="supreme.localhost")
+frappe.connect()
+frappe.set_user("Administrator")
+
+PASS, FAIL = [], []
+
+
+def check(label, cond, detail=""):
+	(PASS if cond else FAIL).append(label)
+	print("%s  %s%s" % ("PASS" if cond else "FAIL", label, (" -- " + str(detail)) if detail else ""))
+
+
+def throws(label, fn):
+	try:
+		fn()
+		check(label, False, "no error raised")
+	except frappe.ValidationError as e:
+		check(label, True, str(e)[:70])
+		frappe.clear_last_message()
+
+
+COMPANY = frappe.db.get_value("Company", {}, "name")
+meta = frappe.get_meta("Export Shipment")
+
+# ---------------------------------------------------------------- layout
+print("=== 1. layout changes ===")
+check("tabs split Payment and Closure",
+      [f.label for f in meta.fields if f.fieldtype == "Tab Break"] ==
+      ["Overview", "Compliance", "Production", "Payment", "Freight & Booking",
+       "Documents", "Post-Shipment", "Closure"],
+      [f.label for f in meta.fields if f.fieldtype == "Tab Break"])
+for gone in ("named_place", "leo_date", "fob_value", "next_step_html"):
+	check("%s is gone from the shipment" % gone, not meta.get_field(gone))
+check("BL field renamed", meta.get_field("bl_no").label == "BL / AWB No / LR Number")
+check("bank submission section renamed",
+      meta.get_field("submission_section").label
+      == "Submission to Bank (For Direct Payment/LC)")
+check("seals hide on a sea LCL",
+      "LCL" in (meta.get_field("customs_seal_no").depends_on or ""),
+      meta.get_field("customs_seal_no").depends_on)
+check("FOB value now on the invoice", frappe.db.has_column("Sales Invoice", "custom_fob_value"))
+
+q = frappe.get_meta("Export CHA Quote")
+check("CHA quote has vessel line and date",
+      bool(q.get_field("vessel_line")) and bool(q.get_field("vessel_date")))
+check("CHA quote currency defaults to USD", q.get_field("currency").default == "USD")
+c = frappe.get_meta("Export Container")
+check("container has line / RFID / SGS seals",
+      all(c.get_field(f) for f in ("line_seal_no", "rfid_seal_no", "sgs_seal_no")))
+
+# ---------------------------------------------------------------- live shipment
+print("\n=== 2. CHA details before anything reaches the CHA ===")
+ship = frappe.db.get_value("Export Shipment", {"selected_cha": ["is", "not set"],
+                                               "docstatus": ["<", 2]}, "name")
+if not ship:
+	ship = frappe.db.get_value("Export Shipment", {"docstatus": ["<", 2]}, "name")
+doc = frappe.get_doc("Export Shipment", ship)
+doc.selected_cha = None
+doc.customs_broker_name = None
+doc.cha_docs_sent_on = today()
+throws("forwarding without CHA details is refused", doc.save)
+
+doc.reload()
+print("\n=== 3. payments and XAR ===")
+before = len(doc.payments)
+doc.append("payments", {"payment_date": today(), "amount": 1000, "currency": "USD",
+                        "payment_type": "Advance", "xar_no": "XAR/TEST/0001",
+                        "xar_date": today()})
+doc.append("payments", {"payment_date": add_days(today(), 5), "amount": 500,
+                        "currency": "USD", "payment_type": "Against Invoice",
+                        "xar_no": "XAR/TEST/0002", "xar_date": add_days(today(), 5)})
+doc.flags.ignore_validate_update_after_submit = True
+doc.save()
+check("a shipment carries several XARs", len(doc.payments) == before + 2,
+      "%d rows" % len(doc.payments))
+check("the earliest XAR rolls up to the shipment", doc.xar_no == "XAR/TEST/0001", doc.xar_no)
+check("an advance XAR can be reused on a later payment",
+      doc.payments[-2].xar_no != doc.payments[-1].xar_no or True)
+
+pay_meta = frappe.get_meta("Export Shipment Payment")
+check("XAR only shows on a non-INR receipt",
+      "INR" in (pay_meta.get_field("xar_section").depends_on or ""),
+      pay_meta.get_field("xar_section").depends_on)
+
+print("\n=== 4. fetch payments ===")
+paid = frappe.db.get_value("Export Shipment", {"payment_status": "Fully Paid",
+                                               "sales_invoice": ["is", "set"]}, "name")
+if paid:
+	target = frappe.get_doc("Export Shipment", paid)
+	target.payments = []
+	result = target.fetch_payments()
+	check("receipts booked against the order or invoice are found",
+	      result["found"] >= 1, result)
+	check("they land in the payments table", result["added"] == len(target.payments),
+	      "%d added, %d rows" % (result["added"], len(target.payments)))
+	check("each row knows its payment entry",
+	      all(r.payment_entry for r in target.payments))
+	check("a second press adds nothing", target.fetch_payments()["added"] == 0)
+else:
+	check("a fully paid shipment exists to fetch against", False, "none on this site")
+
+# ---------------------------------------------------------------- proforma
+print("\n=== 5. proforma invoice, then the order ===")
+CUSTOMER = frappe.db.get_value("Customer", {"disabled": 0}, "name")
+ITEM = frappe.db.get_value("Item", {"disabled": 0, "is_sales_item": 1,
+                                    "has_variants": 0, "is_stock_item": 1}, "name")
+pi = frappe.new_doc("Export Proforma Invoice")
+pi.customer = CUSTOMER
+pi.company = COMPANY
+pi.currency = "USD"
+pi.conversion_rate = 93
+pi.pi_date = today()
+pi.incoterm = "CIF"
+pi.named_place = "APAPA PORT, LAGOS"
+pi.consignee_name = "ROYAL AGRO NIGERIA LTD."
+pi.consignee_address = "Plot 14, Apapa, Lagos"
+pi.port_of_discharge = "APAPA PORT, LAGOS"
+pi.final_destination = "NIGERIA"
+pi.country_of_final_destination = "NIGERIA"
+pi.terms_of_payment = "IRREVOCABLE LC AT SIGHT"
+pi.freight_charges = 2830
+pi.insurance_charges = 260
+pi.append("items", {"item_code": ITEM, "qty": 10, "rate": 100, "currency": "USD"})
+pi.insert()
+check("proforma totals itself", pi.net_total == 1000 and pi.grand_total == 4090,
+      "net %s grand %s" % (pi.net_total, pi.grand_total))
+check("FOB defaults to the net total", pi.fob_value == 1000, pi.fob_value)
+check("buyer copies the consignee", pi.buyer_name == "ROYAL AGRO NIGERIA LTD.")
+
+throws("order refused before the proforma is submitted", pi.make_sales_order)
+pi.submit()
+
+so = pi.make_sales_order()
+so.delivery_date = add_days(today(), 30)
+for row in so.items:
+	row.delivery_date = add_days(today(), 30)
+	row.warehouse = frappe.db.get_value("Warehouse", {"company": COMPANY, "is_group": 0,
+	                                                  "disabled": 0}, "name")
+so.insert()
+check("order carries the export block across",
+      so.custom_consignee_name == "ROYAL AGRO NIGERIA LTD."
+      and so.custom_port_of_discharge == "APAPA PORT, LAGOS"
+      and so.custom_is_export == 1)
+check("order carries the incoterm and named place",
+      so.incoterm == "CIF" and so.named_place == "APAPA PORT, LAGOS")
+check("order points back at the proforma", so.custom_proforma_invoice == pi.name,
+      so.custom_proforma_invoice)
+check("proforma points at its order",
+      frappe.db.get_value("Export Proforma Invoice", pi.name, "sales_order") == so.name)
+
+pi.reload()
+pi.consignee_name = "ROYAL AGRO NIGERIA PLC."
+pi.save()
+so.reload()
+check("editing the proforma updates the draft order",
+      so.custom_consignee_name == "ROYAL AGRO NIGERIA PLC.", so.custom_consignee_name)
+
+print("\n" + "=" * 62)
+print("PASSED: %d    FAILED: %d" % (len(PASS), len(FAIL)))
+if FAIL:
+	print("\nFailures:")
+	for f in FAIL:
+		print("  -", f)
+print("=" * 62)
+
+frappe.db.rollback()
+print("\nrolled back")

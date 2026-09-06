@@ -27,6 +27,7 @@ doctype_js = {
 
 doc_events = {
 	"Sales Order": {
+		"after_insert": "erpnext_export_tracker.events.sales_order.after_insert",
 		"on_submit": "erpnext_export_tracker.events.sales_order.on_submit",
 		"on_cancel": "erpnext_export_tracker.events.sales_order.on_cancel",
 	},

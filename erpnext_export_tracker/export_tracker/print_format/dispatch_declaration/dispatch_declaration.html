@@ -1,3 +1,4 @@
+{%- set named_place = frappe.db.get_value("Sales Order", doc.sales_order, "named_place") if doc.sales_order else "" -%}
 {%- set s = frappe.get_doc("Export Tracker Settings") -%}
 {%- set company = frappe.get_doc("Company", doc.company) -%}
 {%- set si = frappe.get_doc("Sales Invoice", doc.sales_invoice) if doc.sales_invoice else None -%}
@@ -50,7 +51,7 @@
 			<td>{{ doc.port_of_loading or "-" }} / {{ doc.port_of_discharge or "-" }}</td></tr>
 		<tr><td class="k">Date of Shipment (ETD)</td>
 			<td>{{ frappe.utils.formatdate(doc.etd, "dd.MM.yyyy") if doc.etd else "-" }}</td></tr>
-		<tr><td class="k">Terms of Delivery</td><td>{{ doc.incoterm or "-" }} {{ doc.named_place or "" }}</td></tr>
+		<tr><td class="k">Terms of Delivery</td><td>{{ doc.incoterm or "-" }} {{ named_place or "" }}</td></tr>
 		<tr><td class="k">Terms of Payment</td><td>{{ doc.terms_of_payment or "-" }}</td></tr>
 	</table>
 

@@ -21,9 +21,11 @@
   "total_amount",
   "schedule_section",
   "vessel",
+  "vessel_line",
+  "vessel_date",
+  "column_break_schedule",
   "etd",
   "eta",
-  "column_break_schedule",
   "transit_days",
   "free_days",
   "decision_section",
@@ -51,6 +53,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "USD",
    "fieldname": "currency",
    "fieldtype": "Link",
    "label": "Currency",
@@ -125,7 +128,22 @@
   {
    "fieldname": "vessel",
    "fieldtype": "Data",
-   "label": "Vessel"
+   "label": "Vessel Name"
+  },
+  {
+   "description": "The shipping line operating the vessel",
+   "fieldname": "vessel_line",
+   "fieldtype": "Data",
+   "label": "Vessel Line"
+  },
+  {
+   "fieldname": "vessel_date",
+   "fieldtype": "Date",
+   "label": "Vessel Date"
+  },
+  {
+   "fieldname": "column_break_schedule",
+   "fieldtype": "Column Break"
   },
   {
    "fieldname": "etd",
@@ -136,10 +154,6 @@
    "fieldname": "eta",
    "fieldtype": "Date",
    "label": "ETA"
-  },
-  {
-   "fieldname": "column_break_schedule",
-   "fieldtype": "Column Break"
   },
   {
    "columns": 2,
@@ -183,7 +197,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-09-06 14:10:00.000000",
+ "modified": "2026-09-06 16:30:00.000000",
  "modified_by": "Administrator",
  "module": "Export Tracker",
  "name": "Export CHA Quote",

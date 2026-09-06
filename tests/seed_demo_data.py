@@ -309,8 +309,6 @@ else:
 	ship.shipping_bill_no = "7741209"
 	ship.shipping_bill_date = today()
 	ship.port_code = "INNSA1"
-	ship.leo_date = today()
-	ship.fob_value = 23180
 	ship.e_seal_no = "RFID-IN-88214471"
 	ship.e_seal_date = today()
 	ship.e_seal_provider = "ICEGATE approved vendor - Nashik"
@@ -411,6 +409,7 @@ if ship.status == "Docs Submitted":
 	si.custom_gross_weight = 12330
 	si.custom_no_of_packages = 412
 	si.custom_terms_of_payment = "IRREVOCABLE LC AT SIGHT"
+	si.custom_fob_value = 23180
 	si.custom_goods_description = "Poultry Keeping Equipments & parts in ckd condition"
 	for row in so.items:
 		si.append("items", {
