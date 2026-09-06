@@ -12,3 +12,4 @@ erpnext_export_tracker.patches.rename_number_cards
 erpnext_export_tracker.patches.resync_form_layouts
 erpnext_export_tracker.patches.clear_stale_grid_views
 erpnext_export_tracker.patches.align_number_card_labels
+erpnext_export_tracker.patches.export_details_tab

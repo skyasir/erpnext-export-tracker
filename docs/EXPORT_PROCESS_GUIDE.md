@@ -152,6 +152,22 @@ No new roles are created. The workflow uses the standard ones:
 
 ---
 
+### 0.6b Where the export fields are on an order or invoice
+
+Tick **Is Export** on a Quotation, Sales Order or Sales Invoice and an **Export
+Details** tab appears at the end of the form. Leave it unticked and the tab is
+not there at all, so a domestic order is untouched.
+
+| Tab section | Holds |
+|---|---|
+| Consignee & Buyer | consignee, buyer and notify party with their addresses, port of discharge, final destination, country of final destination, terms of payment, and the linked Export Shipment |
+| Export Shipping Details *(invoice only)* | pre-carriage, place of receipt, port of loading, vessel / flight, country of origin, marks & nos, container no, net and gross weight, packages, and the goods description printed above the item rows |
+
+These used to be a collapsible section wedged mid-form. Fifteen fields deep that
+reads as clutter on a domestic order and as a scavenger hunt on an export one.
+
+---
+
 ### 0.7 How the form is laid out
 
 The Export Shipment form is split into **seven tabs**, so a 290-field record

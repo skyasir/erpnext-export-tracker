@@ -12,7 +12,8 @@ paperwork**.
 ## Architecture
 
 Fields that belong to an order or an invoice live on **Sales Order / Sales
-Invoice**. The process lives on **Export Shipment**, one record per consignment,
+Invoice**, in an **Export Details tab** that appears only once *Is Export* is
+ticked — so a domestic order looks exactly as it did before. The process lives on **Export Shipment**, one record per consignment,
 linked to the order. That split matters because one order can ship in several
 containers with separate shipping bills, BLs, XARs and EBRCs — and because the
 process runs for months after the order is submitted.
