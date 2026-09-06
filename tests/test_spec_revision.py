@@ -216,6 +216,55 @@ for doc, label in ((pi, "export"), (dom, "domestic")):
 	except Exception as e:
 		check("the %s proforma prints" % label, False, repr(e)[:120])
 
+print("\n=== 6. taxes and discount behave like an order ===")
+TAX_ACCOUNT = frappe.db.get_value("Account", {"company": COMPANY, "is_group": 0,
+                                              "root_type": "Expense"}, "name")
+taxed = frappe.new_doc("Proforma Invoice")
+taxed.customer = CUSTOMER
+taxed.company = COMPANY
+taxed.transaction_date = today()
+taxed.currency = "INR"
+taxed.conversion_rate = 1
+taxed.append("items", {"item_code": ITEM, "qty": 10, "rate": 100,
+                       "delivery_date": add_days(today(), 30), "warehouse": WAREHOUSE})
+taxed.append("taxes", {"charge_type": "On Net Total", "account_head": TAX_ACCOUNT,
+                       "description": "Freight @ 10%", "rate": 10,
+                       "cost_center": frappe.db.get_value("Cost Center",
+                           {"company": COMPANY, "is_group": 0}, "name")})
+taxed.insert()
+check("a tax row is applied on the net total",
+      taxed.total_taxes_and_charges == 100, taxed.total_taxes_and_charges)
+check("grand total includes the tax", taxed.grand_total == 1100, taxed.grand_total)
+check("the tax breakdown is filled", bool(taxed.other_charges_calculation))
+
+taxed.apply_discount_on = "Grand Total"
+taxed.additional_discount_percentage = 10
+taxed.save()
+check("a percentage discount reduces the grand total",
+      taxed.discount_amount == 110 and taxed.grand_total == 990,
+      "discount %s grand %s" % (taxed.discount_amount, taxed.grand_total))
+
+taxed.submit()
+taxed_so = taxed.make_sales_order()
+taxed_so.delivery_date = add_days(today(), 30)
+for row in taxed_so.items:
+	row.delivery_date = add_days(today(), 30)
+	row.warehouse = WAREHOUSE
+taxed_so.insert()
+check("taxes copy to the order", len(taxed_so.taxes) == 1
+      and taxed_so.taxes[0].account_head == TAX_ACCOUNT, len(taxed_so.taxes))
+check("the discount copies too",
+      taxed_so.additional_discount_percentage == 10, taxed_so.additional_discount_percentage)
+check("the order lands on the same grand total",
+      taxed_so.grand_total == taxed.grand_total,
+      "%s vs %s" % (taxed_so.grand_total, taxed.grand_total))
+try:
+	out = frappe.get_print("Proforma Invoice", taxed.name, print_format="Proforma Invoice")
+	check("a taxed proforma prints its charges", "FREIGHT @ 10%" in out.upper(),
+	      "%d chars" % len(out))
+except Exception as e:
+	check("a taxed proforma prints its charges", False, repr(e)[:120])
+
 print("\n" + "=" * 62)
 print("PASSED: %d    FAILED: %d" % (len(PASS), len(FAIL)))
 if FAIL:

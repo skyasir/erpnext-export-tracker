@@ -66,6 +66,19 @@ class ProformaInvoice(SellingController):
 		with self.as_sales_order():
 			return super().fetch_item_details(item)
 
+	def calculate_taxes_and_totals(self):
+		"""Total up as a selling document.
+
+		ERPNext decides whether a document is bought or sold by matching its name
+		against a hard-coded list -- Quotation, Sales Order, Delivery Note, Sales
+		Invoice, POS Invoice. Anything else falls to the purchase branch, which
+		reads `category` off each tax row: a Purchase Taxes and Charges field that
+		a Sales Taxes and Charges row does not have. The first tax you added blew
+		up on it.
+		"""
+		with self.as_sales_order():
+			super().calculate_taxes_and_totals()
+
 	def validate(self):
 		super().validate()
 		self.set_status()
@@ -163,7 +176,7 @@ def make_sales_order(source_name, target_doc=None):
 		target.run_method("set_missing_values")
 		target.run_method("calculate_taxes_and_totals")
 
-	return get_mapped_doc(
+	target = get_mapped_doc(
 		"Proforma Invoice",
 		source_name,
 		{
@@ -182,3 +195,36 @@ def make_sales_order(source_name, target_doc=None):
 		target_doc,
 		postprocess,
 	)
+
+	restore_taxes(frappe.get_doc("Proforma Invoice", source_name), target)
+	return target
+
+
+# what identifies a charge; the rest is recomputed from the order's own figures
+TAX_FIELDS = (
+	"charge_type", "account_head", "description", "rate", "cost_center",
+	"included_in_print_rate", "row_id", "item_wise_tax_detail", "tax_amount",
+	"account_currency",
+)
+
+
+def restore_taxes(source, target):
+	"""Put back the tax table the mapper just copied.
+
+	India Compliance resets a document's GST details when it decides the mapping
+	crosses between a sales and a purchase document, and it decides that by
+	matching both doctype names against its own list. A Proforma Invoice is not
+	in that list, so a perfectly ordinary proforma-to-order copy looks like a
+	crossing and the tax rows are wiped -- the order came out at the net total
+	with the charges gone.
+
+	Only ever runs when the target has lost them; an order that legitimately has
+	its own taxes is left alone.
+	"""
+	if not source.get("taxes") or target.get("taxes"):
+		return
+
+	for row in source.taxes:
+		target.append("taxes", {field: row.get(field) for field in TAX_FIELDS})
+
+	target.run_method("calculate_taxes_and_totals")
