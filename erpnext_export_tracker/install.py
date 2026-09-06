@@ -724,7 +724,13 @@ STAGE_CHART = "Export Shipments by Stage"
 def make_dashboard():
 	"""Number cards and the stage chart behind the Export Tracker workspace."""
 	for name, doctype, filters, function, based_on, colour in NUMBER_CARDS:
+		# A Number Card names itself from its label, and the workspace resolves the
+		# card by that same string -- so label, name and the workspace's child row
+		# all have to agree. The cards are laid out three to a row instead, which
+		# is what stops the titles truncating.
 		if frappe.db.exists("Number Card", name):
+			if frappe.db.get_value("Number Card", name, "label") != name:
+				frappe.db.set_value("Number Card", name, "label", name)
 			continue
 		card = frappe.new_doc("Number Card")
 		card.update(

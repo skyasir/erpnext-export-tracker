@@ -18,6 +18,37 @@ cd <bench>/sites
 | `test_export_documents.py` | rebuilds a real 3-container shipment and checks the five documents we issue, their arithmetic, package numbering, and that no print format exists for the three third-party documents |
 | `uat_routes_and_hooks.py` | the LC route gates, the Through Bank document set, part-shipment, the Delivery Note hook, advance-against-order payment, Payment Entry / Sales Invoice cancel paths, the invoice→shipment fallback lookup, the remaining country templates, reports with rows actually in them, PDF generation |
 
+## Demo data
+
+```bash
+cd <bench>/sites
+../env/bin/python ../apps/erpnext_export_tracker/tests/seed_demo_data.py
+../env/bin/python ../apps/erpnext_export_tracker/tests/clean_demo_data.py   # take it out again
+```
+
+`seed_demo_data.py` builds three shipments and parks them at three different
+stages, so the guidance panel, the freight comparison and the closure checklist
+all have something real to show:
+
+| | Destination | Terms | Left at |
+|---|---|---|---|
+| A | Nigeria | CIF, under a Letter of Credit | **EBRC Generated** — invoiced, paid, XAR, bank submission, EBRC, incentive; Form M / BA and a SONCAP inspection on the way through, with the printed documents attached to the checklist and a document pack built |
+| B | Uganda | FOB, through the bank | **Freight Finalised** — three forwarder quotes to compare, three weekly production updates, SGS inspection open |
+| C | Malawi | CIF, direct to the client | **Order Confirmed** — indent deliberately left unapproved, so the panel shows a live blocker; the country profile flags inland haulage |
+
+Everything is tagged `DEMO` and tied to three demo customers.
+`clean_demo_data.py` walks the dependency order — payment, invoice, shipment,
+indent, order, address, customer — and matches only those customers, so real
+work on the same site is never in scope. Two things it taught us about this site:
+
+- **The Sales Order needs `company_address`** or India Compliance refuses it
+  ("Please set Company Address Name..."), and the party needs a **GST Category**
+  (`Overseas` for an export buyer).
+- **The Sales Invoice must NOT have `company_address` set.** With it, India
+  Compliance rebuilds the tax table on an export invoice and silently drops the
+  freight and insurance rows that make up the CIF value — the invoice comes out
+  at the ex-works total instead.
+
 ## Site constants resolve themselves
 
 The scripts prefer the documented names — `Sundry Debtors - Corporate - SEPL`,
