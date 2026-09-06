@@ -44,6 +44,14 @@ doc_events = {
 	},
 }
 
+# A Proforma Invoice uses Sales Order Item, and ERPNext derives the item doctype
+# from the parent's name -- see overrides.get_item_details for why that needs a
+# hand. The override delegates straight back to ERPNext.
+override_whitelisted_methods = {
+	"erpnext.stock.get_item_details.get_item_details":
+		"erpnext_export_tracker.overrides.get_item_details",
+}
+
 scheduler_events = {
 	"daily": [
 		"erpnext_export_tracker.tasks.send_export_reminders",

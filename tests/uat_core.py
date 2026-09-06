@@ -447,8 +447,32 @@ for pf in ("Bill of Exchange", "Dispatch Declaration", "Letter of Undertaking",
 	except Exception as e:
 		check("renders: %s" % pf, False, repr(e)[:140])
 
+# a proforma to print: the same items and taxes as an order, export flag on
+proforma = frappe.new_doc("Proforma Invoice")
+proforma.customer = CUSTOMER
+proforma.company = COMPANY
+proforma.transaction_date = today()
+proforma.currency = "USD"
+proforma.conversion_rate = 93.0
+proforma.is_export = 1
+proforma.incoterm = "CIF"
+proforma.named_place = "MOMBASA PORT"
+proforma.consignee_name = "M/S. ROYAL AGROVET LTD."
+proforma.consignee_address = "P.O. Box 11194, Kampala - Uganda"
+proforma.port_of_discharge = "MOMBASA PORT"
+proforma.final_destination = "UGANDA"
+proforma.terms_of_payment = "100% ADVANCE"
+proforma.append("items", {"item_code": ITEM, "qty": 5, "rate": 120,
+                          "delivery_date": add_days(today(), 30), "warehouse": WAREHOUSE})
+proforma.insert()
+check("proforma totals like an order",
+      proforma.total == 600 and proforma.grand_total == 600,
+      "total %s grand %s" % (proforma.total, proforma.grand_total))
+check("proforma uses the Sales Order item table",
+      proforma.items[0].doctype == "Sales Order Item", proforma.items[0].doctype)
+
 for pf, dt, name in (("Export Packing List", "Sales Invoice", si.name),
-                     ("Export Proforma Invoice", "Sales Order", so.name)):
+                     ("Proforma Invoice", "Proforma Invoice", proforma.name)):
 	try:
 		out = frappe.get_print(dt, name, print_format=pf)
 		check("renders: %s" % pf, len(out) > 500, "%d chars" % len(out))

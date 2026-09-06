@@ -369,7 +369,7 @@ was originally quoted.
 **Who:** Sales User · **Where:** the Quotation → *Create → Sales Order*, then print
 
 Create the Sales Order from the accepted Quotation, then print it with the
-**Export Proforma Invoice** format. It carries the exporter block, banker block,
+**Proforma Invoice** format. It carries the exporter block, banker block,
 consignee/buyer, terms and the full charge build-up.
 
 ### Step 4.2 — Order confirmation details

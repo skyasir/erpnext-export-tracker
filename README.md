@@ -38,7 +38,7 @@ Sales Invoice EXP/### → the legal Export Invoice (own print format)
 | **Export Shipment** | The spine. 13-state workflow, CHA comparison, document checklists, LC, bank closure, incentive. |
 | **Export Indent** | SOP G.a — replaces the Excel indent. Production confirms technical details, then management approves. |
 | **Export Document Template** | Country/route-driven checklists. Nigeria pulls SONCAP + CCVO, Uganda SGS, Nepal/Bhutan LUT, Sri Lanka ISFTA. |
-| **Export Proforma Invoice** | The commercial offer, and the earlier document: a submitted proforma raises the Sales Order, which raises the shipment. Export details edited on it flow to the linked order. |
+| **Proforma Invoice** | The commercial offer, and the earlier document: a submitted proforma raises the Sales Order, which raises the shipment. A copy of the Sales Order in every respect -- same item table, same tax table, same totals -- with export as a checkbox rather than a purpose, so it serves domestic quotes too. |
 | **Export Country Profile** | Per-destination compliance rules — inspection agency, Form M / BA, inland haulage, COO type, extra documents. Nothing about a destination is hard-coded; add a profile and shipments to it pick the rules up. |
 | **Export Tracker Settings** | IEC code, End Use Code, PAN, banker details, exporter block, reminder thresholds. |
 
@@ -104,7 +104,7 @@ Three buttons do the work that used to be manual:
 |---|---|
 | Export Invoice | Sales Invoice |
 | Export Packing List | Sales Invoice |
-| Export Proforma Invoice | Sales Order |
+| Proforma Invoice | Proforma Invoice |
 | Bill of Exchange, Dispatch Declaration, Letter of Undertaking, Request Letter to Bank, Export Value Declaration, SCOMET Letter, Insurance Declaration | Export Shipment |
 
 The Export Invoice is a replica of the department's existing sheet: exporter block
