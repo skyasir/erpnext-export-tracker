@@ -17,6 +17,7 @@ frappe.ui.form.on("Export Shipment", {
 
 			frm.add_custom_button(__("Compare Freight Quotes"), () => compare_quotes(frm), __("Freight"));
 			frm.add_custom_button(__("Add Weekly Update"), () => production_update(frm), __("Production"));
+			frm.add_custom_button(__("Fetch Payments"), () => fetch_payments(frm), __("Payment"));
 		}
 
 		set_indicators(frm);
@@ -46,30 +47,75 @@ frappe.ui.form.on("Export Shipment", {
 // One round trip feeds both the next-step panel and the closure checklist --
 // they answer the same question and the shipment is a big document to post.
 function refresh_panels(frm) {
-	const guidance = frm.get_field("next_step_html");
+	const guidance = panel_host(frm);
 
 	if (frm.is_new()) {
-		if (guidance) {
-			guidance.$wrapper.html(
-				blank_state(__("Save the shipment to see what the export desk owes next."))
-			);
-		}
+		guidance.html(blank_state(__("Save the shipment to see what the export desk owes next.")));
 		return;
 	}
 
 	frm.call({ doc: frm.doc, method: "get_next_step" }).then((r) => {
 		const d = r && r.message;
 		if (!d) return;
-		paint(frm, guidance, guidance_html(d));
+		guidance.html(guidance_html(d));
+		bind_goto(frm, guidance);
 		paint(frm, frm.get_field("closure_checklist_html"), closure_html(frm, d));
+	});
+}
+
+// The panel belongs to the whole shipment, not to one tab, so it is injected
+// between the tab bar and the tab content rather than living in a field. A field
+// can only sit inside a tab, and would vanish the moment you left it.
+function panel_host(frm) {
+	let $host = frm.$wrapper.find(".et-panel-host").first();
+	if ($host.length) return $host;
+
+	$host = $('<div class="et-panel-host"></div>');
+	const $tabs = frm.$wrapper.find(".form-tabs-list").first();
+	if ($tabs.length) {
+		$tabs.after($host);
+	} else {
+		frm.$wrapper.find(".form-layout").first().prepend($host);
+	}
+	return $host;
+}
+
+function bind_goto(frm, $el) {
+	$el.find("[data-goto]").on("click", function () {
+		frm.scroll_to_field($(this).attr("data-goto"));
 	});
 }
 
 function paint(frm, field, html) {
 	if (!field) return;
 	field.$wrapper.html(html);
-	field.$wrapper.find("[data-goto]").on("click", function () {
-		frm.scroll_to_field($(this).attr("data-goto"));
+	bind_goto(frm, field.$wrapper);
+}
+
+// ---------------------------------------------------------------------------
+// payments -- SOP section 12
+// ---------------------------------------------------------------------------
+function fetch_payments(frm) {
+	frm.call({
+		doc: frm.doc,
+		method: "fetch_payments",
+		freeze: true,
+		freeze_message: __("Looking for receipts against the order and invoice..."),
+	}).then((r) => {
+		if (!r || !r.message) return;
+		const { added, found } = r.message;
+		frm.refresh_field("payments");
+		if (!found) {
+			frappe.msgprint(__("No submitted receipts are booked against this shipment's order or invoice yet."));
+			return;
+		}
+		frappe.show_alert({
+			message: added
+				? __("{0} payment(s) added. Enter the XAR against each, then save.", [added])
+				: __("Nothing new -- all {0} receipt(s) are already listed.", [found]),
+			indicator: added ? "green" : "blue",
+		});
+		if (added) frm.scroll_to_field("payments");
 	});
 }
 
@@ -404,6 +450,7 @@ function set_indicators(frm) {
 
 // Desk colour variables, so the panel follows the user's theme.
 const STYLE = `<style>
+.et-panel-host { margin: 10px 0 4px; }
 .et-panel { border: 1px solid var(--border-color); border-radius: var(--border-radius-md, 6px);
 	padding: 12px 14px; background: var(--fg-color, #fff); }
 .et-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }

@@ -9,8 +9,6 @@
   "naming_series",
   "status",
   "stage_index",
-  "guidance_section",
-  "next_step_html",
   "links_section",
   "sales_order",
   "customer",
@@ -51,7 +49,6 @@
   "country_of_final_destination",
   "column_break_terms",
   "incoterm",
-  "named_place",
   "terms_of_payment",
   "etd",
   "eta",
@@ -109,6 +106,33 @@
   "last_production_update",
   "production_updates_section",
   "production_updates",
+  "tab_payment",
+  "payment_section",
+  "invoice_amount",
+  "total_received",
+  "column_break_payment",
+  "outstanding_amount",
+  "payment_status",
+  "final_payment_date",
+  "payments_section",
+  "payments",
+  "lc_section",
+  "lc_no",
+  "lc_issuing_bank",
+  "lc_advising_bank",
+  "lc_draft_received_on",
+  "lc_terms_reviewed",
+  "lc_management_confirmed",
+  "column_break_lc",
+  "lc_applicant",
+  "lc_beneficiary",
+  "lc_amount",
+  "lc_acceptance_sent_on",
+  "lc_received_on",
+  "lc_expiry_date",
+  "lc_last_shipment_date",
+  "lc_presentation_days",
+  "lc_payment_released_on",
   "tab_logistics",
   "freight_section",
   "cha_quotes",
@@ -171,10 +195,8 @@
   "customs_section",
   "shipping_bill_no",
   "shipping_bill_date",
-  "fob_value",
   "column_break_customs",
   "port_code",
-  "leo_date",
   "examination_report",
   "shipping_bill_attachment",
   "eseal_section",
@@ -248,30 +270,6 @@
   "originals_delivery_status",
   "originals_document_list",
   "tab_closure",
-  "lc_section",
-  "lc_no",
-  "lc_issuing_bank",
-  "lc_advising_bank",
-  "lc_draft_received_on",
-  "lc_terms_reviewed",
-  "lc_management_confirmed",
-  "column_break_lc",
-  "lc_applicant",
-  "lc_beneficiary",
-  "lc_amount",
-  "lc_acceptance_sent_on",
-  "lc_received_on",
-  "lc_expiry_date",
-  "lc_last_shipment_date",
-  "lc_presentation_days",
-  "lc_payment_released_on",
-  "payment_section",
-  "invoice_amount",
-  "total_received",
-  "column_break_payment",
-  "outstanding_amount",
-  "payment_status",
-  "final_payment_date",
   "closure_checklist_section",
   "closure_checklist_html",
   "closure_section",
@@ -327,14 +325,6 @@
    "label": "Stage Index",
    "no_copy": 1,
    "read_only": 1
-  },
-  {
-   "fieldname": "guidance_section",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "next_step_html",
-   "fieldtype": "HTML"
   },
   {
    "fieldname": "links_section",
@@ -564,11 +554,6 @@
    "fieldtype": "Link",
    "label": "Terms of Delivery",
    "options": "Incoterm"
-  },
-  {
-   "fieldname": "named_place",
-   "fieldtype": "Data",
-   "label": "Named Place"
   },
   {
    "description": "Printed on the export invoice, e.g. 100% ADVANCE",
@@ -879,6 +864,159 @@
    "options": "Export Production Update"
   },
   {
+   "fieldname": "tab_payment",
+   "fieldtype": "Tab Break",
+   "label": "Payment"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.stage_index >= 1",
+   "fieldname": "payment_section",
+   "fieldtype": "Section Break",
+   "label": "Payment"
+  },
+  {
+   "fieldname": "invoice_amount",
+   "fieldtype": "Currency",
+   "label": "Invoice Amount",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_received",
+   "fieldtype": "Currency",
+   "label": "Amount Received",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_payment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "outstanding_amount",
+   "fieldtype": "Currency",
+   "label": "Outstanding",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "default": "Unpaid",
+   "fieldname": "payment_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Payment Status",
+   "options": "Unpaid\nPartly Paid\nFully Paid",
+   "read_only": 1
+  },
+  {
+   "fieldname": "final_payment_date",
+   "fieldtype": "Date",
+   "label": "Final Payment Received On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payments_section",
+   "fieldtype": "Section Break",
+   "label": "Receipts"
+  },
+  {
+   "description": "One row per receipt. XAR is captured against the payment it belongs to, so an invoice settled in parts carries an XAR for each.",
+   "fieldname": "payments",
+   "fieldtype": "Table",
+   "label": "Payments",
+   "options": "Export Shipment Payment"
+  },
+  {
+   "depends_on": "eval:doc.payment_route=='Through Letter of Credit'",
+   "description": "LC acceptance and negotiation -- SOP G.c.ii.3.g",
+   "fieldname": "lc_section",
+   "fieldtype": "Section Break",
+   "label": "Letter of Credit"
+  },
+  {
+   "fieldname": "lc_no",
+   "fieldtype": "Data",
+   "label": "LC No"
+  },
+  {
+   "fieldname": "lc_issuing_bank",
+   "fieldtype": "Data",
+   "label": "LC Issuing Bank"
+  },
+  {
+   "fieldname": "lc_advising_bank",
+   "fieldtype": "Data",
+   "label": "Advising Bank"
+  },
+  {
+   "fieldname": "lc_draft_received_on",
+   "fieldtype": "Date",
+   "label": "LC Draft Received On"
+  },
+  {
+   "default": "0",
+   "fieldname": "lc_terms_reviewed",
+   "fieldtype": "Check",
+   "label": "Terms & Conditions Reviewed"
+  },
+  {
+   "default": "0",
+   "fieldname": "lc_management_confirmed",
+   "fieldtype": "Check",
+   "label": "Management Confirmation Taken"
+  },
+  {
+   "fieldname": "column_break_lc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "lc_applicant",
+   "fieldtype": "Data",
+   "label": "Applicant"
+  },
+  {
+   "fieldname": "lc_beneficiary",
+   "fieldtype": "Data",
+   "label": "Beneficiary"
+  },
+  {
+   "fieldname": "lc_amount",
+   "fieldtype": "Currency",
+   "label": "LC Amount",
+   "options": "currency"
+  },
+  {
+   "fieldname": "lc_acceptance_sent_on",
+   "fieldtype": "Date",
+   "label": "Acceptance Sent to Customer On"
+  },
+  {
+   "fieldname": "lc_received_on",
+   "fieldtype": "Date",
+   "label": "LC Received On"
+  },
+  {
+   "fieldname": "lc_expiry_date",
+   "fieldtype": "Date",
+   "label": "LC Expiry Date"
+  },
+  {
+   "fieldname": "lc_last_shipment_date",
+   "fieldtype": "Date",
+   "label": "Last Date of Shipment"
+  },
+  {
+   "fieldname": "lc_presentation_days",
+   "fieldtype": "Int",
+   "label": "Presentation Period (days)"
+  },
+  {
+   "fieldname": "lc_payment_released_on",
+   "fieldtype": "Date",
+   "label": "Payment Released On"
+  },
+  {
    "fieldname": "tab_logistics",
    "fieldtype": "Tab Break",
    "label": "Freight & Booking"
@@ -1068,11 +1206,13 @@
    "label": "Container Loaded On"
   },
   {
+   "depends_on": "eval:!(doc.mode == 'Sea' && doc.shipment_type == 'LCL')",
    "fieldname": "customs_seal_no",
    "fieldtype": "Data",
    "label": "Customs Seal No"
   },
   {
+   "depends_on": "eval:!(doc.mode == 'Sea' && doc.shipment_type == 'LCL')",
    "fieldname": "shipping_line_seal_no",
    "fieldtype": "Data",
    "label": "Shipping Line Seal No"
@@ -1225,12 +1365,6 @@
    "label": "Shipping Bill Date"
   },
   {
-   "fieldname": "fob_value",
-   "fieldtype": "Currency",
-   "label": "FOB Value",
-   "options": "currency"
-  },
-  {
    "fieldname": "column_break_customs",
    "fieldtype": "Column Break"
   },
@@ -1238,11 +1372,6 @@
    "fieldname": "port_code",
    "fieldtype": "Data",
    "label": "Port Code"
-  },
-  {
-   "fieldname": "leo_date",
-   "fieldtype": "Date",
-   "label": "Let Export Order Date"
   },
   {
    "fieldname": "examination_report",
@@ -1255,7 +1384,7 @@
    "label": "Shipping Bill Copy"
   },
   {
-   "depends_on": "eval:doc.shipment_type != 'LCL'",
+   "depends_on": "eval:!(doc.mode == 'Sea' && doc.shipment_type == 'LCL')",
    "fieldname": "eseal_section",
    "fieldtype": "Section Break",
    "label": "E-Seal / RFID"
@@ -1460,7 +1589,7 @@
   {
    "fieldname": "bl_no",
    "fieldtype": "Data",
-   "label": "BL / AWB No"
+   "label": "BL / AWB No / LR Number"
   },
   {
    "fieldname": "bl_date",
@@ -1508,7 +1637,7 @@
    "collapsible_depends_on": "eval:doc.stage_index >= 6",
    "fieldname": "submission_section",
    "fieldtype": "Section Break",
-   "label": "Submission to Bank / Client"
+   "label": "Submission to Bank (For Direct Payment/LC)"
   },
   {
    "default": "0",
@@ -1638,143 +1767,7 @@
   {
    "fieldname": "tab_closure",
    "fieldtype": "Tab Break",
-   "label": "Payment & Closure"
-  },
-  {
-   "depends_on": "eval:doc.payment_route=='Through Letter of Credit'",
-   "description": "LC acceptance and negotiation -- SOP G.c.ii.3.g",
-   "fieldname": "lc_section",
-   "fieldtype": "Section Break",
-   "label": "Letter of Credit"
-  },
-  {
-   "fieldname": "lc_no",
-   "fieldtype": "Data",
-   "label": "LC No"
-  },
-  {
-   "fieldname": "lc_issuing_bank",
-   "fieldtype": "Data",
-   "label": "LC Issuing Bank"
-  },
-  {
-   "fieldname": "lc_advising_bank",
-   "fieldtype": "Data",
-   "label": "Advising Bank"
-  },
-  {
-   "fieldname": "lc_draft_received_on",
-   "fieldtype": "Date",
-   "label": "LC Draft Received On"
-  },
-  {
-   "default": "0",
-   "fieldname": "lc_terms_reviewed",
-   "fieldtype": "Check",
-   "label": "Terms & Conditions Reviewed"
-  },
-  {
-   "default": "0",
-   "fieldname": "lc_management_confirmed",
-   "fieldtype": "Check",
-   "label": "Management Confirmation Taken"
-  },
-  {
-   "fieldname": "column_break_lc",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "lc_applicant",
-   "fieldtype": "Data",
-   "label": "Applicant"
-  },
-  {
-   "fieldname": "lc_beneficiary",
-   "fieldtype": "Data",
-   "label": "Beneficiary"
-  },
-  {
-   "fieldname": "lc_amount",
-   "fieldtype": "Currency",
-   "label": "LC Amount",
-   "options": "currency"
-  },
-  {
-   "fieldname": "lc_acceptance_sent_on",
-   "fieldtype": "Date",
-   "label": "Acceptance Sent to Customer On"
-  },
-  {
-   "fieldname": "lc_received_on",
-   "fieldtype": "Date",
-   "label": "LC Received On"
-  },
-  {
-   "fieldname": "lc_expiry_date",
-   "fieldtype": "Date",
-   "label": "LC Expiry Date"
-  },
-  {
-   "fieldname": "lc_last_shipment_date",
-   "fieldtype": "Date",
-   "label": "Last Date of Shipment"
-  },
-  {
-   "fieldname": "lc_presentation_days",
-   "fieldtype": "Int",
-   "label": "Presentation Period (days)"
-  },
-  {
-   "fieldname": "lc_payment_released_on",
-   "fieldtype": "Date",
-   "label": "Payment Released On"
-  },
-  {
-   "collapsible": 1,
-   "collapsible_depends_on": "eval:doc.stage_index >= 1",
-   "fieldname": "payment_section",
-   "fieldtype": "Section Break",
-   "label": "Payment"
-  },
-  {
-   "fieldname": "invoice_amount",
-   "fieldtype": "Currency",
-   "label": "Invoice Amount",
-   "options": "currency",
-   "read_only": 1
-  },
-  {
-   "fieldname": "total_received",
-   "fieldtype": "Currency",
-   "label": "Amount Received",
-   "options": "currency",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_payment",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "outstanding_amount",
-   "fieldtype": "Currency",
-   "label": "Outstanding",
-   "options": "currency",
-   "read_only": 1
-  },
-  {
-   "default": "Unpaid",
-   "fieldname": "payment_status",
-   "fieldtype": "Select",
-   "in_standard_filter": 1,
-   "label": "Payment Status",
-   "options": "Unpaid\nPartly Paid\nFully Paid",
-   "read_only": 1
-  },
-  {
-   "fieldname": "final_payment_date",
-   "fieldtype": "Date",
-   "label": "Final Payment Received On",
-   "read_only": 1
+   "label": "Closure"
   },
   {
    "fieldname": "closure_checklist_section",
@@ -1794,14 +1787,17 @@
    "label": "Bank Closure"
   },
   {
+   "description": "First XAR recorded against a payment",
    "fieldname": "xar_no",
    "fieldtype": "Data",
-   "label": "XAR No"
+   "label": "XAR No",
+   "read_only": 1
   },
   {
    "fieldname": "xar_date",
    "fieldtype": "Date",
-   "label": "XAR Date"
+   "label": "XAR Date",
+   "read_only": 1
   },
   {
    "fieldname": "bank_charges",

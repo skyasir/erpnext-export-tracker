@@ -6,6 +6,18 @@ from erpnext_export_tracker.export_tracker.doctype.export_shipment.export_shipme
 )
 
 
+def after_insert(doc, method=None):
+	"""Write the order back onto the proforma it came from.
+
+	The link is set here rather than in the mapper because the order has no name
+	until it is saved, and both sides need to point at each other for the
+	proforma's later edits to find their way across.
+	"""
+	pi = doc.get("custom_proforma_invoice")
+	if pi and not frappe.db.get_value("Export Proforma Invoice", pi, "sales_order"):
+		frappe.db.set_value("Export Proforma Invoice", pi, "sales_order", doc.name)
+
+
 def on_submit(doc, method=None):
 	"""Tick Is Export on a Sales Order and submitting it opens the shipment."""
 	if not doc.get("custom_is_export"):

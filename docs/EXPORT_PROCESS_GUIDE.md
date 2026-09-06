@@ -175,13 +175,17 @@ reads as seven short ones.
 
 | Tab | Holds |
 |---|---|
-| **Overview** | The next-step panel, references, consignee & buyer, carriage & terms, shipment type, remarks |
+| **Overview** | References, consignee & buyer, carriage & terms, shipment type, remarks |
 | **Compliance** | The destination's requirements, Form M / BA, pre-shipment inspection, insurance |
 | **Production** | Readiness summary and the weekly updates |
 | **Freight & Booking** | CHA comparison, selected freight, route & additional charges, container booking and cut-offs, containers, packing |
+The tabs run Overview, Compliance, Production, **Payment**, Freight & Booking,
+Documents, Post-Shipment, **Closure** — payment before the freight is committed,
+closure after the documents are out.
 | **Documents** | Pre-shipment checklist, CHA checklist, shipping bill, e-seal, e-way bill, signatory |
 | **Post-Shipment** | Post-shipment checklist, COO, bill of lading, submission, sent-to-client, original documents |
-| **Payment & Closure** | Letter of credit, payment, closure checklist, bank closure, export incentive |
+| **Payment** | Payment summary, the receipts table with an XAR against each, letter of credit |
+| **Closure** | Closure checklist, bank closure, export incentive |
 
 Sections used to *disappear* until the shipment reached their stage. They no
 longer do — a gate could otherwise demand a field you could not see. Instead each
@@ -206,7 +210,9 @@ than LCL, the client asked for originals).
 
 ### 0.8 The next-step panel — read this before anything else
 
-Every saved shipment opens with a panel above the References section. It answers
+Every saved shipment carries a panel between the tab bar and the tab content, so
+it stays on screen whichever tab you are on -- it belongs to the shipment, not to
+one tab. It answers
 the only three questions the desk actually has.
 
 ```

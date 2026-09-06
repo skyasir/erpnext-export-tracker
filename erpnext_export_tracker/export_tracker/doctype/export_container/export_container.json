@@ -8,6 +8,9 @@
   "container_no",
   "container_size",
   "seal_no",
+  "line_seal_no",
+  "rfid_seal_no",
+  "sgs_seal_no",
   "no_of_packages",
   "net_weight",
   "gross_weight",
@@ -44,7 +47,23 @@
    "fieldname": "seal_no",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Seal No"
+   "label": "Company Seal"
+  },
+  {
+   "fieldname": "line_seal_no",
+   "fieldtype": "Data",
+   "label": "Line Seal"
+  },
+  {
+   "fieldname": "rfid_seal_no",
+   "fieldtype": "Data",
+   "label": "RFID Seal"
+  },
+  {
+   "description": "Where the destination's inspection agency seals the container",
+   "fieldname": "sgs_seal_no",
+   "fieldtype": "Data",
+   "label": "SGS Seal"
   },
   {
    "columns": 1,
@@ -121,7 +140,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-07-30 10:00:00.000000",
+ "modified": "2026-09-06 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Export Tracker",
  "name": "Export Container",

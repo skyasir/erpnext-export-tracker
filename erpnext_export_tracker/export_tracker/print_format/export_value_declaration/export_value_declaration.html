@@ -1,3 +1,4 @@
+{%- set named_place = frappe.db.get_value("Sales Order", doc.sales_order, "named_place") if doc.sales_order else "" -%}
 {%- set s = frappe.get_doc("Export Tracker Settings") -%}
 {%- set si = frappe.get_doc("Sales Invoice", doc.sales_invoice) if doc.sales_invoice else None -%}
 {%- macro txt(v) -%}{{ (v or "") | replace("&", "&amp;") }}{%- endmacro -%}
@@ -55,7 +56,7 @@
 
 		<li>Terms of Payment: {{ txt(doc.terms_of_payment) }}</li>
 
-		<li>Terms of Delivery: {{ txt(doc.incoterm) }} {{ txt(doc.named_place) }}</li>
+		<li>Terms of Delivery: {{ txt(doc.incoterm) }} {{ txt(named_place) }}</li>
 
 		<li>Previous exports of identical/similar goods, if any: Shipping Bill No. and date:</li>
 
