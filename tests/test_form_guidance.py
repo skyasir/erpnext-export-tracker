@@ -201,6 +201,61 @@ for table in sorted(set(CHILD_TABLES)):
 			check("%-40s columns are balanced" % name, abs(counts[0] - counts[1]) <= 2,
 			      "%s vs %s fields" % (counts[0], counts[1]))
 
+# ---------------------------------------------------------------- sidebar
+# The sidebar used to be a record somebody made in the desk, so it existed on one
+# site and nowhere else. It ships from the app now; this fails if it stops being
+# synced, or if a filtered document link loses its filter.
+print("\n=== workspace sidebar ships from the app ===")
+SIDEBAR = os.path.join(APP, "erpnext_export_tracker/workspace_sidebar/export_tracker.json")
+check("the app ships a sidebar", os.path.exists(SIDEBAR))
+if os.path.exists(SIDEBAR):
+	shipped_sidebar = json.load(open(SIDEBAR))
+	live_sidebar = (
+		frappe.get_doc("Workspace Sidebar", "Export Tracker")
+		if frappe.db.exists("Workspace Sidebar", "Export Tracker")
+		else None
+	)
+	check("it is synced onto the site", bool(live_sidebar))
+	if live_sidebar:
+		check("owned by the app, not the site", live_sidebar.standard == 1
+		      and live_sidebar.app == "erpnext_export_tracker",
+		      "standard=%s app=%s" % (live_sidebar.standard, live_sidebar.app))
+		check("every shipped item is live",
+		      len(live_sidebar.items) == len(shipped_sidebar["items"]),
+		      "%d live vs %d shipped" % (len(live_sidebar.items),
+		                                 len(shipped_sidebar["items"])))
+
+		# each export document opens filtered to its own Is Export flag
+		wanted = {
+			"Proforma Invoice": "is_export",
+			"Quotation": "custom_is_export",
+			"Sales Order": "custom_is_export",
+			"Sales Invoice": "custom_is_export",
+			"Delivery Note": "custom_is_export",
+		}
+		live_filters = {i.label: i.filters for i in live_sidebar.items if i.filters}
+		for label, fieldname in wanted.items():
+			raw = live_filters.get(label)
+			ok = False
+			if raw:
+				try:
+					ok = any(f[1] == fieldname and str(f[3]) == "1"
+					         for f in json.loads(raw))
+				except (ValueError, IndexError):
+					ok = False
+			check("%-18s filtered on %s" % (label, fieldname), ok, raw or "no filter")
+
+		# a link that names a doctype nobody installed is a dead entry
+		dead = [i.label for i in live_sidebar.items
+		        if i.type == "Link" and i.link_type == "DocType" and i.link_to
+		        and not frappe.db.exists("DocType", i.link_to)]
+		check("no sidebar link points at a missing doctype", not dead, dead or "none")
+		dead_reports = [i.label for i in live_sidebar.items
+		                if i.type == "Link" and i.link_type == "Report" and i.link_to
+		                and not frappe.db.exists("Report", i.link_to)]
+		check("no sidebar link points at a missing report", not dead_reports,
+		      dead_reports or "none")
+
 # ---------------------------------------------------------------- workspace
 # Frappe skips a fixture whose `modified` matches the database, so a workspace
 # edited without bumping that timestamp silently never lands.
