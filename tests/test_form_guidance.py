@@ -73,6 +73,95 @@ for state in STATE_ORDER:
 			bad.append("%s -> %s" % (state, req["fieldname"]))
 check("no requirement names a field that is not on the form", not bad, bad or "none")
 
+# A gate that demands a field the form hides is a dead end: the panel lists it as
+# blocking, the "go" link scrolls to nothing, and the shipment cannot move. The
+# section-level check above does not catch it, because this kind of hiding is on
+# the field. So evaluate each field's own depends_on against a real document and
+# insist that nothing blocking is invisible.
+print("\n=== nothing blocking is hidden ===")
+import re  # noqa: E402
+
+depends = {df.fieldname: (df.depends_on or "") for df in meta.fields}
+section_of, current = {}, ""
+for df in meta.fields:
+	if df.fieldtype in ("Section Break", "Tab Break"):
+		current = df.fieldname
+	else:
+		section_of[df.fieldname] = current
+
+
+def visible(doc, fieldname):
+	"""Is this field on screen for this document?
+
+	Walks the field's own condition and its section's. An expression we cannot
+	read is treated as visible, so the check only ever reports something it is
+	sure about.
+	"""
+	for name in (fieldname, section_of.get(fieldname)):
+		if not name:
+			continue
+		if not shown(doc, depends.get(name, "")):
+			return False
+	return True
+
+
+def shown(doc, condition):
+	if not condition:
+		return True
+
+	if not condition.startswith("eval:"):
+		return bool(doc.get(condition.strip()))
+
+	expr = condition[len("eval:"):]
+	expr = expr.replace("!==", "!=").replace("===", "==")
+	expr = re.sub(r"!(?!=)", " not ", expr)
+	expr = expr.replace("&&", " and ").replace("||", " or ")
+	expr = re.sub(r"\bdoc\.([a-z_][a-z0-9_]*)", r'_v("\1")', expr)
+	try:
+		return bool(eval(expr, {"__builtins__": {}}, {"_v": doc.get}))  # noqa: S307
+	except Exception:
+		return True  # unreadable -- say nothing rather than cry wolf
+
+
+# the shapes a shipment actually takes, including the one that was stuck
+SHAPES = [
+	("sea LCL", {"mode": "Sea", "shipment_type": "LCL"}),
+	("sea FCL", {"mode": "Sea", "shipment_type": "FCL"}),
+	("air", {"mode": "Air", "shipment_type": "Air"}),
+	("LC route", {"mode": "Sea", "shipment_type": "FCL",
+	              "payment_route": "Through Letter of Credit"}),
+	("inspection + Form M", {"mode": "Sea", "shipment_type": "FCL",
+	                         "inspection_required": 1, "form_m_required": 1}),
+	("insured, originals", {"mode": "Sea", "shipment_type": "FCL",
+	                        "insurance_required": 1, "originals_required": 1}),
+]
+
+for label, shape in SHAPES:
+	probe = frappe.new_doc("Export Shipment")
+	probe.status = STATE_ORDER[0]
+	probe.update(shape)
+	hidden_blockers = []
+	for state in STATE_ORDER:
+		for req in probe.requirements_for(state):
+			if not (req["blocking"] and req["fieldname"]):
+				continue
+			if not visible(probe, req["fieldname"]):
+				hidden_blockers.append("%s: %s (%s)" % (state, req["label"],
+				                                        req["fieldname"]))
+	check("%-20s blocks on nothing it hides" % label, not hidden_blockers,
+	      hidden_blockers or "none")
+
+# and the rule the controller reads has to be the rule the form draws
+seal_probe = frappe.new_doc("Export Shipment")
+for mode, kind, expected in (("Sea", "LCL", False), ("Sea", "FCL", True),
+                             ("Air", "Air", True)):
+	seal_probe.mode, seal_probe.shipment_type = mode, kind
+	check("seals_apply agrees with the form for %s %s" % (mode, kind),
+	      seal_probe.seals_apply() == expected
+	      and visible(seal_probe, "customs_seal_no") == expected,
+	      "seals_apply=%s visible=%s" % (seal_probe.seals_apply(),
+	                                     visible(seal_probe, "customs_seal_no")))
+
 print("\n=== the panel names the same action the workflow does ===")
 wf = frappe.get_doc("Workflow", "Export Shipment Process")
 wf_actions = {t.state: t.action for t in wf.transitions}

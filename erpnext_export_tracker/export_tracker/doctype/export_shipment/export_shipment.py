@@ -444,6 +444,20 @@ class ExportShipment(Document):
 	def reached(self, state):
 		return self.state_index() >= STATE_ORDER.index(state)
 
+	def seals_apply(self):
+		"""Whether this consignment is sealed by us at all.
+
+		A sea LCL load is stuffed at the CFS alongside other people's cargo, so
+		the line seals the container, not the exporter -- which is why the seal
+		fields hide themselves for it. The gate has to read the same rule, or the
+		panel ends up blocking on two fields the form will not show and the "go"
+		link leads nowhere.
+
+		Mirrors the `depends_on` on customs_seal_no, shipping_line_seal_no and
+		the e-seal section; tests/test_form_guidance.py fails if they drift.
+		"""
+		return not (self.mode == "Sea" and self.shipment_type == "LCL")
+
 	def requirements_for(self, state):
 		"""What this shipment still owes before it may sit in `state`.
 
@@ -511,9 +525,13 @@ class ExportShipment(Document):
 			out += [
 				R(_("Container Loaded On"), self.loading_date, "loading_date"),
 				R(_("Container No(s)"), self.container_no, "containers"),
-				R(_("Customs Seal No"), self.customs_seal_no, "customs_seal_no"),
-				R(_("Shipping Line Seal No"), self.shipping_line_seal_no, "shipping_line_seal_no"),
 			]
+			if self.seals_apply():
+				out += [
+					R(_("Customs Seal No"), self.customs_seal_no, "customs_seal_no"),
+					R(_("Shipping Line Seal No"), self.shipping_line_seal_no,
+					  "shipping_line_seal_no"),
+				]
 
 		elif state == "Shipped":
 			out += [
