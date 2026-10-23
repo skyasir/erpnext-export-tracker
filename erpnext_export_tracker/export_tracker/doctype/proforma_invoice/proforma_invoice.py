@@ -1,10 +1,15 @@
-from contextlib import contextmanager
-
 import frappe
 from frappe import _
 from frappe.model.mapper import get_mapped_doc
 
 from erpnext.controllers.selling_controller import SellingController
+
+from erpnext_export_tracker.selling_doctype import register as register_selling_doctype
+
+# harmless if app load already did it; this module is also imported on its own
+# by scripts and tests that never go through the app's __init__
+register_selling_doctype()
+
 
 # The export block only. Items, taxes and totals reach the order through the
 # mapper; these are the fields the proforma keeps agreeing with it afterwards.
@@ -34,50 +39,22 @@ class ProformaInvoice(SellingController):
 	document with the export block hidden.
 	"""
 
-	@contextmanager
-	def as_sales_order(self):
-		"""Answer to "Sales Order" for the length of a call.
-
-		ERPNext works out which item doctype to read by appending " Item" to the
-		parent's name, ignoring the `child_doctype` it is already holding. This
-		document uses Sales Order Item, so that lookup asks for a "Proforma
-		Invoice Item" that does not exist, and every item you pick reports "not
-		found".
-
-		Borrowing the name is honest rather than a trick: the two documents have
-		the same item table, the same tax table and the same totals, so every
-		rate, pricing rule and item default that follows is the one an order
-		would have got.
-		"""
-		actual = self.doctype
-		self.doctype = "Sales Order"
-		try:
-			yield
-		finally:
-			self.doctype = actual
-
-	def set_missing_item_details(self, for_validate=False):
-		with self.as_sales_order():
-			super().set_missing_item_details(for_validate=for_validate)
-
-	def fetch_item_details(self, item):
-		# what the form calls through process_item_selection when a row's item
-		# code is chosen
-		with self.as_sales_order():
-			return super().fetch_item_details(item)
-
 	def calculate_taxes_and_totals(self):
 		"""Total up as a selling document.
 
 		ERPNext decides whether a document is bought or sold by matching its name
-		against a hard-coded list -- Quotation, Sales Order, Delivery Note, Sales
-		Invoice, POS Invoice. Anything else falls to the purchase branch, which
-		reads `category` off each tax row: a Purchase Taxes and Charges field that
-		a Sales Taxes and Charges row does not have. The first tax you added blew
-		up on it.
+		against a list written into taxes_and_totals.py -- Quotation, Sales Order,
+		Delivery Note, Sales Invoice, POS Invoice. That one is a literal, so
+		registering the doctype elsewhere does not reach it, and anything else
+		falls to the purchase branch which reads `category` off each tax row: a
+		Purchase Taxes and Charges field a sales row does not have.
 		"""
-		with self.as_sales_order():
+		actual = self.doctype
+		self.doctype = "Sales Order"
+		try:
 			super().calculate_taxes_and_totals()
+		finally:
+			self.doctype = actual
 
 	def validate(self):
 		super().validate()
@@ -162,9 +139,10 @@ class ProformaInvoice(SellingController):
 def make_sales_order(source_name, target_doc=None):
 	"""The order the proforma turned into.
 
-	Both documents use Sales Order Item and Sales Taxes and Charges, so items,
-	taxes, discount and totals copy across untouched. Returned unsaved: delivery
-	date and warehouse are the order's business, not the proforma's.
+	Proforma Invoice Item is a copy of Sales Order Item field for field, and both
+	documents share Sales Taxes and Charges, so items, taxes, discount and totals
+	copy across untouched. Returned unsaved: delivery date and warehouse are the
+	order's business, not the proforma's.
 	"""
 
 	def postprocess(source, target):
@@ -186,7 +164,7 @@ def make_sales_order(source_name, target_doc=None):
 				"field_no_map": ["naming_series", "status", "valid_till", "amended_from"],
 				"validation": {"docstatus": ["=", 1]},
 			},
-			"Sales Order Item": {
+			"Proforma Invoice Item": {
 				"doctype": "Sales Order Item",
 				"field_no_map": ["delivery_date"],
 			},
@@ -196,35 +174,52 @@ def make_sales_order(source_name, target_doc=None):
 		postprocess,
 	)
 
-	restore_taxes(frappe.get_doc("Proforma Invoice", source_name), target)
 	return target
 
 
-# what identifies a charge; the rest is recomputed from the order's own figures
-TAX_FIELDS = (
-	"charge_type", "account_head", "description", "rate", "cost_center",
-	"included_in_print_rate", "row_id", "item_wise_tax_detail", "tax_amount",
-	"account_currency",
-)
+@frappe.whitelist()
+def make_proforma_invoice(source_name, target_doc=None):
+	"""The proforma a quotation turned into.
 
+	Quotation -> Proforma Invoice -> Sales Order is the whole selling chain here,
+	and each step is a straight copy: the proforma carries the order's structure
+	and the quotation's own item and tax tables map onto it field for field.
 
-def restore_taxes(source, target):
-	"""Put back the tax table the mapper just copied.
-
-	India Compliance resets a document's GST details when it decides the mapping
-	crosses between a sales and a purchase document, and it decides that by
-	matching both doctype names against its own list. A Proforma Invoice is not
-	in that list, so a perfectly ordinary proforma-to-order copy looks like a
-	crossing and the tax rows are wiped -- the order came out at the net total
-	with the charges gone.
-
-	Only ever runs when the target has lost them; an order that legitimately has
-	its own taxes is left alone.
+	A quotation raised to a Lead has no customer to put on the proforma, so it is
+	refused rather than half-filled.
 	"""
-	if not source.get("taxes") or target.get("taxes"):
-		return
+	quotation = frappe.db.get_value(
+		"Quotation", source_name, ["quotation_to", "party_name"], as_dict=True
+	)
+	if quotation and quotation.quotation_to != "Customer":
+		frappe.throw(
+			_("Quotation {0} is addressed to a {1}. Convert it to a customer before "
+			  "raising a proforma invoice.").format(source_name, quotation.quotation_to)
+		)
 
-	for row in source.taxes:
-		target.append("taxes", {field: row.get(field) for field in TAX_FIELDS})
+	def postprocess(source, target):
+		target.customer = source.party_name
+		target.quotation = source.name
+		target.run_method("set_missing_values")
+		target.run_method("calculate_taxes_and_totals")
 
-	target.run_method("calculate_taxes_and_totals")
+	return get_mapped_doc(
+		"Quotation",
+		source_name,
+		{
+			"Quotation": {
+				"doctype": "Proforma Invoice",
+				"field_map": {"transaction_date": "transaction_date"},
+				"field_no_map": ["naming_series", "status", "amended_from", "valid_till",
+				                 "title"],
+				"validation": {"docstatus": ["=", 1]},
+			},
+			"Quotation Item": {
+				"doctype": "Proforma Invoice Item",
+				"field_no_map": ["delivery_date"],
+			},
+			"Sales Taxes and Charges": {"doctype": "Sales Taxes and Charges"},
+		},
+		target_doc,
+		postprocess,
+	)

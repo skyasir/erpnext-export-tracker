@@ -99,6 +99,11 @@ def resync(doctype):
 	if not name:
 		return
 
+	# read the order fresh: during a migrate the doctype has just been re-synced
+	# from disk, and a cached meta here would rebuild the property setter from
+	# the layout we have only just replaced
+	frappe.clear_cache(doctype=doctype)
+
 	standard = frappe.get_all(
 		"DocField",
 		filters={"parent": doctype},
@@ -110,18 +115,37 @@ def resync(doctype):
 		return
 
 	order = list(standard)
-	for cf in frappe.get_all(
-		"Custom Field",
-		filters={"dt": doctype},
-		fields=["fieldname", "insert_after"],
-		order_by="idx asc",
-	):
-		if cf.fieldname in order:
-			continue
-		# an anchor we no longer have (or never had) puts the field at the end --
-		# never at the front, where a stray break would split the first section
-		at = order.index(cf.insert_after) + 1 if cf.insert_after in order else len(order)
-		order.insert(at, cf.fieldname)
+	pending = [
+		cf
+		for cf in frappe.get_all(
+			"Custom Field",
+			filters={"dt": doctype},
+			fields=["fieldname", "insert_after"],
+			order_by="idx asc",
+		)
+		if cf.fieldname not in order
+	]
+
+	# a custom field can anchor to another custom field, so one pass is not
+	# enough: place everything whose anchor is known, then go round again for the
+	# ones that were waiting on it
+	while pending:
+		placed = []
+		for cf in pending:
+			if cf.insert_after not in order:
+				continue
+			order.insert(order.index(cf.insert_after) + 1, cf.fieldname)
+			placed.append(cf)
+
+		if not placed:
+			# whatever is left anchors to something this doctype does not have;
+			# append rather than prepend, where a stray break would split the
+			# first section
+			for cf in pending:
+				order.append(cf.fieldname)
+			break
+
+		pending = [cf for cf in pending if cf not in placed]
 
 	frappe.db.set_value("Property Setter", name, "value", json.dumps(order))
 	frappe.clear_cache(doctype=doctype)
