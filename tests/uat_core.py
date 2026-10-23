@@ -1,7 +1,7 @@
 """End-to-end UAT for erpnext_export_tracker. Rolls everything back at the end."""
 
 import frappe
-from frappe.utils import add_days, today
+from frappe.utils import add_days, flt, today
 
 PASS, FAIL = [], []
 
@@ -45,8 +45,10 @@ def pick(doctype, preferred, filters):
 frappe.set_user("Administrator")
 frappe.flags.in_test = True
 
-CUSTOMER = "A1 Poultry Farm"
-ITEM = "SE-AO-FS-300011"
+CUSTOMER = pick("Customer", ["A1 Poultry Farm"],
+	{"disabled": 0})
+ITEM = pick("Item", ["SE-AO-FS-300011"],
+	{"disabled": 0, "is_sales_item": 1, "has_variants": 0, "is_stock_item": 1})
 COMPANY = "Supreme Equipments Pvt Ltd"
 WAREHOUSE = "P1 - Central / Main Store - SEPL"
 if frappe.db.get_value("Warehouse", WAREHOUSE, "disabled") != 0:
@@ -465,11 +467,15 @@ proforma.terms_of_payment = "100% ADVANCE"
 proforma.append("items", {"item_code": ITEM, "qty": 5, "rate": 120,
                           "delivery_date": add_days(today(), 30), "warehouse": WAREHOUSE})
 proforma.insert()
+# GST applies to a proforma exactly as it does to an order, so the grand total
+# is the net plus whatever the customer's tax template adds
 check("proforma totals like an order",
-      proforma.total == 600 and proforma.grand_total == 600,
-      "total %s grand %s" % (proforma.total, proforma.grand_total))
-check("proforma uses the Sales Order item table",
-      proforma.items[0].doctype == "Sales Order Item", proforma.items[0].doctype)
+      proforma.total == 600
+      and proforma.grand_total == proforma.net_total + flt(proforma.total_taxes_and_charges),
+      "net %s tax %s grand %s" % (proforma.net_total, proforma.total_taxes_and_charges,
+                                  proforma.grand_total))
+check("proforma uses its own item table",
+      proforma.items[0].doctype == "Proforma Invoice Item", proforma.items[0].doctype)
 
 for pf, dt, name in (("Export Packing List", "Sales Invoice", si.name),
                      ("Proforma Invoice", "Proforma Invoice", proforma.name)):

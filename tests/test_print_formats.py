@@ -30,7 +30,11 @@ APP = frappe.get_app_path("erpnext_export_tracker")
 BASE = os.path.join(APP, "export_tracker", "print_format")
 
 formats = frappe.get_all(
-	"Print Format", filters={"module": "Export Tracker"}, fields=["name", "doc_type", "standard"]
+	"Print Format",
+	# standard "No" means the format was built in the desk and stores its own
+	# HTML; only the ones this app ships have a template on disk to check
+	filters={"module": "Export Tracker", "standard": "Yes"},
+	fields=["name", "doc_type", "standard"],
 )
 check("print formats are registered", len(formats) > 0, "%d found" % len(formats))
 

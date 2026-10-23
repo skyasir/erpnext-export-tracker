@@ -43,6 +43,7 @@ WORKFLOW_NAME = "Export Shipment Process"
 
 def after_install():
 	make_custom_fields()
+	make_gst_custom_fields()
 	add_export_invoice_series()
 	make_workflow_masters()
 	make_workflow()
@@ -302,7 +303,7 @@ def get_custom_fields():
 
 	return {
 		"Quotation": [
-			is_export("party_name"),
+			is_export("company"),
 			export_tab("Quotation"),
 			*consignee_fields("custom_export_tab"),
 			{
@@ -314,7 +315,7 @@ def get_custom_fields():
 			},
 		],
 		"Sales Order": [
-			is_export("customer"),
+			is_export("skip_delivery_note"),
 			export_tab("Sales Order"),
 			*consignee_fields("custom_export_tab"),
 			{
@@ -339,7 +340,7 @@ def get_custom_fields():
 			},
 		],
 		"Sales Invoice": [
-			is_export("customer"),
+			is_export("is_pos"),
 			export_tab("Sales Invoice"),
 			*consignee_fields("custom_export_tab"),
 			*invoice_shipping_fields,
@@ -363,7 +364,7 @@ def get_custom_fields():
 			},
 		],
 		"Delivery Note": [
-			is_export("customer"),
+			is_export("company"),
 			{
 				"fieldname": "custom_export_shipment",
 				"label": "Export Shipment",
@@ -379,7 +380,29 @@ def get_custom_fields():
 
 
 def make_custom_fields():
-	create_custom_fields(get_custom_fields(), ignore_validate=True)
+	fields = get_custom_fields()
+	create_custom_fields(fields, ignore_validate=True)
+	reanchor_existing(fields)
+
+
+def reanchor_existing(fields):
+	"""Move a field that has already been created.
+
+	create_custom_fields only sets insert_after when it creates the field, so a
+	field that moved in a later release stays where it first landed -- Is Export
+	sat beside the customer name on every document instead of with the other
+	flags.
+	"""
+	for doctype, definitions in fields.items():
+		for df in definitions:
+			anchor = df.get("insert_after")
+			if not anchor:
+				continue
+			name = frappe.db.exists(
+				"Custom Field", {"dt": doctype, "fieldname": df["fieldname"]}
+			)
+			if name and frappe.db.get_value("Custom Field", name, "insert_after") != anchor:
+				frappe.db.set_value("Custom Field", name, "insert_after", anchor)
 
 
 def add_export_invoice_series():
@@ -826,3 +849,104 @@ def make_dashboard():
 				"module": MODULE,
 			}
 		).insert(ignore_permissions=True)
+
+
+# ----------------------------------------------------------------------
+# GST on a proforma
+# ----------------------------------------------------------------------
+# A Proforma Invoice is a Sales Order that has not been agreed yet, so it needs
+# the same GST block. Rather than retype seventeen fields and watch them drift,
+# take India Compliance's own definitions and apply the ones it gives a Sales
+# Order to the proforma, and the ones it gives a Sales Order Item to ours.
+GST_SOURCE = {
+	"Sales Order": "Proforma Invoice",
+	"Sales Order Item": "Proforma Invoice Item",
+}
+
+
+def make_gst_custom_fields():
+	"""Mirror India Compliance's sales GST fields onto the proforma.
+
+	Silent on a site without India Compliance: no GST app, no GST fields, and a
+	proforma that still totals perfectly well without them.
+	"""
+	try:
+		from india_compliance.gst_india.constants.custom_fields import CUSTOM_FIELDS
+	except ImportError:
+		return
+
+	fields = {}
+	anchors_for = {}
+	for key, definitions in CUSTOM_FIELDS.items():
+		sources = key if isinstance(key, tuple) else (key,)
+		# most entries list their fields; a few describe a single one
+		if isinstance(definitions, dict):
+			definitions = [definitions]
+		for source in sources:
+			target = GST_SOURCE.get(source)
+			if not target:
+				continue
+			for df in definitions:
+				field = dict(df)
+				field["module"] = MODULE
+				fields.setdefault(target, []).append(field)
+				anchors_for.setdefault(target, source)
+
+	# reverse charge is a separate set India Compliance only creates while the
+	# matching GST Setting is on, and the "Is Export With Payment of GST" field
+	# anchors to it -- without it that field has nowhere to sit
+	try:
+		from india_compliance.gst_india.constants.custom_fields import (
+			SALES_REVERSE_CHARGE_FIELDS,
+		)
+
+		if frappe.db.get_single_value("GST Settings", "enable_reverse_charge_in_sales"):
+			source = SALES_REVERSE_CHARGE_FIELDS.get("Sales Order")
+			if source:
+				fields.setdefault("Proforma Invoice", []).append(
+					dict(source, module=MODULE)
+				)
+	except ImportError:
+		pass
+
+	for target, definitions in fields.items():
+		reanchor(target, anchors_for.get(target, "Sales Order"), definitions)
+
+	if fields:
+		create_custom_fields(fields, ignore_validate=True)
+
+
+def reanchor(target, source, definitions):
+	"""Point each field at a neighbour the proforma actually has.
+
+	India Compliance positions its fields with insert_after against the Sales
+	Order, and some of them anchor to each other -- "Is Export With Payment of
+	GST" sits after the reverse charge flag, which only exists while a GST
+	Setting is on. An anchor we do not have sends the field to the bottom of the
+	form, which is how it ended up under Additional Info instead of beside the
+	customer.
+
+	So walk back up the order's own field order until we reach something we do
+	have, and anchor there. The field lands in the same part of the form whether
+	or not its original neighbour was created.
+	"""
+	known = {df.fieldname for df in frappe.get_meta(target).fields}
+	known.update(df["fieldname"] for df in definitions)
+
+	source_order = [df.fieldname for df in frappe.get_meta(source).fields]
+	for field in definitions:
+		anchor = field.get("insert_after")
+		if not anchor or anchor in known or anchor not in source_order:
+			continue
+		for candidate in reversed(source_order[: source_order.index(anchor)]):
+			if candidate not in known:
+				continue
+			field["insert_after"] = candidate
+			# a field created on an earlier run keeps the anchor it was created
+			# with, and create_custom_fields will not rewrite it
+			existing = frappe.db.exists(
+				"Custom Field", {"dt": target, "fieldname": field["fieldname"]}
+			)
+			if existing:
+				frappe.db.set_value("Custom Field", existing, "insert_after", candidate)
+			break

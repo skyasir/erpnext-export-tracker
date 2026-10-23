@@ -44,7 +44,8 @@ def pick(doctype, preferred, filters):
 
 frappe.set_user("Administrator")
 
-CUSTOMER = "A1 Poultry Farm"
+CUSTOMER = pick("Customer", ["A1 Poultry Farm"],
+	{"disabled": 0})
 # this suite books a Delivery Note, so the item has to be a stock item -- the one
 # the SOP examples use stopped being one when the site reorganised its item master
 ITEM = pick("Item", ["SE-AO-FS-300011"],

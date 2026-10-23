@@ -32,7 +32,11 @@ def pick(doctype, preferred, filters):
 
 frappe.set_user("Administrator")
 
-CUSTOMER, ITEM, COMPANY = "A1 Poultry Farm", "SE-AO-FS-300011", "Supreme Equipments Pvt Ltd"
+COMPANY = pick("Company", ["Supreme Equipments Pvt Ltd"], {})
+CUSTOMER = pick("Customer", ["A1 Poultry Farm"],
+	{"disabled": 0})
+ITEM = pick("Item", ["SE-AO-FS-300011"],
+	{"disabled": 0, "is_sales_item": 1, "has_variants": 0, "is_stock_item": 1})
 WAREHOUSE = "P1 - Central / Main Store - SEPL"
 if frappe.db.get_value("Warehouse", WAREHOUSE, "disabled") != 0:
 	WAREHOUSE = frappe.db.get_value(
