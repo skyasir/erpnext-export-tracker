@@ -15,3 +15,4 @@ erpnext_export_tracker.patches.align_number_card_labels
 erpnext_export_tracker.patches.export_details_tab
 erpnext_export_tracker.patches.shipment_spec_revision
 erpnext_export_tracker.patches.rename_proforma_invoice
+erpnext_export_tracker.patches.proforma_own_item_table
