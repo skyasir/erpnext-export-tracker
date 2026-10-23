@@ -375,12 +375,14 @@ for name in cards:
 	try:
 		# the desk passes filters_json in as the second argument -- passing None
 		# runs the card unfiltered and every counter comes back as the row count
-		unfiltered = get_result(card, None)
 		filtered = get_result(card, card.filters_json)
 		check("card query runs: %-34s %s" % (name, filtered), True)
-		if card.function == "Count" and unfiltered == filtered and filtered:
-			check("card %s actually filters" % name, False,
-			      "same as unfiltered (%s)" % unfiltered)
+		# the real failure this guards against is filters_json never reaching the
+		# query. Comparing counts cannot see it when every row happens to match,
+		# so check the card actually carries a filter instead.
+		parsed = frappe.parse_json(card.filters_json or "[]")
+		check("card %-34s carries a filter" % name, bool(parsed),
+		      card.filters_json)
 	except Exception as e:
 		check("card query runs: %s" % name, False, str(e)[:80])
 

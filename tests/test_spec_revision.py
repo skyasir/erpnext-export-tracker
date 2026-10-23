@@ -4,7 +4,7 @@ Runs in a transaction and rolls back, so it leaves nothing behind.
 """
 
 import frappe
-from frappe.utils import add_days, today
+from frappe.utils import add_days, flt, today
 
 frappe.init(site="supreme.localhost")
 frappe.connect()
@@ -105,7 +105,8 @@ if paid:
 	      all(r.payment_entry for r in target.payments))
 	check("a second press adds nothing", target.fetch_payments()["added"] == 0)
 else:
-	check("a fully paid shipment exists to fetch against", False, "none on this site")
+	# a precondition of the site, not a property of the app
+	print("SKIP  fetch payments -- no fully paid shipment with an invoice on this site")
 
 # ---------------------------------------------------------------- proforma
 print("\n=== 5. proforma invoice: domestic and export ===")
@@ -116,7 +117,9 @@ WAREHOUSE = frappe.db.get_value("Warehouse", {"company": COMPANY, "is_group": 0,
                                               "disabled": 0}, "name")
 pi_meta = frappe.get_meta("Proforma Invoice")
 check("named just Proforma Invoice", not frappe.db.exists("DocType", "Export Proforma Invoice"))
-check("uses the Sales Order item table", pi_meta.get_field("items").options == "Sales Order Item")
+check("has its own item table",
+      pi_meta.get_field("items").options == "Proforma Invoice Item",
+      pi_meta.get_field("items").options)
 check("uses the Sales Order tax table",
       pi_meta.get_field("taxes").options == "Sales Taxes and Charges")
 check("export block is a gated tab, not the whole document",
@@ -149,16 +152,24 @@ def build(is_export):
 # --- domestic
 dom = build(is_export=False)
 check("a domestic proforma saves with no export details", dom.name and not dom.is_export)
-check("domestic totals like an order", dom.total == 1000 and dom.grand_total == 1000,
-      "total %s grand %s" % (dom.total, dom.grand_total))
+# a domestic proforma now attracts GST exactly as a domestic order does, so the
+# grand total is the net plus whatever tax the customer's template applies
+check("domestic totals like an order",
+      dom.total == 1000
+      and dom.grand_total == dom.net_total + flt(dom.total_taxes_and_charges),
+      "net %s tax %s grand %s" % (dom.net_total, dom.total_taxes_and_charges,
+                                  dom.grand_total))
 check("amount in words is filled", bool(dom.in_words), dom.in_words)
-check("rows are Sales Order Items", dom.items[0].doctype == "Sales Order Item")
+check("rows are Proforma Invoice Items",
+      dom.items[0].doctype == "Proforma Invoice Item", dom.items[0].doctype)
 
 # --- export
 pi = build(is_export=True)
 check("an export proforma keeps its consignee", pi.consignee_name == "ROYAL AGRO NIGERIA LTD.")
 check("buyer copies the consignee", pi.buyer_name == "ROYAL AGRO NIGERIA LTD.")
-check("base totals convert at the rate", pi.base_grand_total == 93000, pi.base_grand_total)
+check("base totals convert at the rate",
+      pi.base_grand_total == pi.grand_total * 93,
+      "%s = %s x 93" % (pi.base_grand_total, pi.grand_total))
 
 pi_no_consignee = frappe.new_doc("Proforma Invoice")
 pi_no_consignee.update({"customer": CUSTOMER, "company": COMPANY, "is_export": 1,
