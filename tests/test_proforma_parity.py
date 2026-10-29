@@ -129,15 +129,54 @@ print("     note: site-specific fields on Sales Order Item, not mirrored: %s"
       % (site_only or "none"))
 
 # ERPNext and India Compliance decide how to treat a document from lists of
-# selling doctypes. Building a proforma is what puts ours in them -- frappe has
-# to load the controller to make the document, and that is the registration.
+# selling doctypes, and one of those lists decides who may price an item at all.
+# A request hook is what puts ours in them on a live site. Call it the way the
+# hook does rather than by building a proforma: the controller registers too, so
+# building one first would hide the very regression this guards -- a worker that
+# has never saved a proforma refusing to price one.
 from erpnext.accounts import party  # noqa: E402
-from erpnext.stock.get_item_details import sales_doctypes  # noqa: E402
+from erpnext.accounts.doctype.pricing_rule import pricing_rule  # noqa: E402
+from erpnext.stock.get_item_details import get_item_details, sales_doctypes  # noqa: E402
 
-frappe.new_doc("Proforma Invoice")
+from erpnext_export_tracker import hooks as et_hooks  # noqa: E402
+from erpnext_export_tracker.selling_doctype import register  # noqa: E402
+
+check("registration runs on every request", et_hooks.PRICING_REGISTER in et_hooks.before_request)
+check("registration runs on every background job", et_hooks.PRICING_REGISTER in et_hooks.before_job)
+
+register()
 
 check("registered as a selling doctype", "Proforma Invoice" in sales_doctypes)
 check("registered as a sales transaction", "Proforma Invoice" in party.SALES_TRANSACTION_TYPES)
+check("allowed to be priced", "Proforma Invoice" in pricing_rule.PRICING_TRANSACTION_DOCTYPES)
+
+
+def fetch_item(doctype):
+	"""What the form does the moment a user picks an item."""
+	customer = customer_in("same") or frappe.db.get_value("Customer", {"disabled": 0}, "name")
+	price_list = frappe.db.get_value("Price List", {"selling": 1, "enabled": 1}, "name")
+	try:
+		got = get_item_details(frappe._dict({
+			"item_code": ITEM, "qty": 1, "doctype": doctype, "company": COMPANY,
+			"customer": customer, "price_list": price_list, "currency": "INR",
+			"conversion_rate": 1, "conversion_factor": 1, "plc_conversion_rate": 1,
+			"transaction_date": today(), "child_docname": "new-row-1",
+		}))
+		return True, got
+	except Exception as e:
+		return False, e
+
+
+# the failure users hit: get_item_details is behind the same allow-list, so
+# before this the proforma answered every item with a bare "Invalid doctype"
+ok, detail = fetch_item("Proforma Invoice")
+check("an item can be picked on a proforma", ok, "" if ok else detail)
+if ok:
+	_, order_detail = fetch_item("Sales Order")
+	check("the item comes back as it does on an order",
+	      order_detail and detail.get("income_account") == order_detail.get("income_account"),
+	      "proforma %s vs order %s" % (detail.get("income_account"),
+	                                   (order_detail or {}).get("income_account")))
 try:
 	from india_compliance.gst_india.constants import SALES_DOCTYPES
 	from india_compliance.gst_india.overrides import transaction
