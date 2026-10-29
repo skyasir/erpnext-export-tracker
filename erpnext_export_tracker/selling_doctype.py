@@ -3,27 +3,41 @@
 ERPNext and India Compliance both decide how to treat a document by matching its
 name against lists of selling doctypes. Those lists govern which price list
 applies, whether the company address and its GSTIN are fetched onto the
-document, which party the tax belongs to, whether GST is worked out per row, and
-whether a mapping counts as crossing between sales and purchase.
+document, which party the tax belongs to, whether GST is worked out per row,
+whether a mapping counts as crossing between sales and purchase, and whether an
+item may be priced on the document at all.
 
-A document missing from them is treated as a purchase. That is why GST never
-computed on a proforma, and why its taxes were wiped on the way to the order.
+A document missing from them is treated as a purchase, or refused outright. That
+is why GST never computed on a proforma, why its taxes were wiped on the way to
+the order, and why picking an item answered "Invalid doctype".
 
-Every list is a mutable container shared by everyone who imported it, so adding
-to the object itself takes effect whatever the import order was.
+Registration runs from the before_request and before_job hooks, so the lists are
+in place for whatever the worker handles next. It cannot rely on the controller
+module being imported: pricing and item details are fetched through their own
+whitelisted methods, which build no Proforma Invoice and so import no
+controller. That is why this worked on a worker that had already saved one and
+failed on a fresh one. The controller imports this module too, which covers
+`bench console`, tests and anything else running outside a request.
 
-Called when the Proforma Invoice controller module is imported, which is the one
-moment that is guaranteed: frappe loads the controller to build the document, so
-anything that goes on to read these lists has already triggered it. An app-load
-hook would be tidier but does not exist -- frappe serves hooks from cache and
-may never import the app package at all.
+The lists are process-wide, so on a bench where one site has this app and
+another does not, both end up patched. That costs nothing: the other site has no
+such doctype, so no document can name it and the permission check behind these
+lists still refuses.
 """
 
 DOCTYPE = "Proforma Invoice"
 
+# module globals are per process; once patched they stay patched
+_registered = False
+
 
 def register():
 	"""Idempotent, and quiet about anything that is not installed."""
+	global _registered
+
+	if _registered:
+		return
+
 	try:
 		from erpnext.stock.get_item_details import sales_doctypes
 
@@ -43,6 +57,22 @@ def register():
 		pass
 
 	try:
+		from erpnext.accounts.doctype.pricing_rule import pricing_rule
+
+		# Who may call the pricing engine. It also gates get_item_details, so
+		# without this a user cannot even pick an item -- they get a bare
+		# "Invalid doctype". Unlike the others it is a frozenset, so it is
+		# rebound rather than added to; nothing else imports the name, and
+		# validate_pricing_context reads it off the module on each call, so the
+		# new value is the one that counts. getattr because older erpnext
+		# releases do not have the guard at all.
+		allowed = getattr(pricing_rule, "PRICING_TRANSACTION_DOCTYPES", None)
+		if allowed is not None and DOCTYPE not in allowed:
+			pricing_rule.PRICING_TRANSACTION_DOCTYPES = allowed | {DOCTYPE}
+	except ImportError:
+		pass
+
+	try:
 		from india_compliance.gst_india.constants import SALES_DOCTYPES
 		from india_compliance.gst_india.overrides import transaction
 
@@ -53,3 +83,5 @@ def register():
 	except ImportError:
 		# a site without India Compliance simply has no GST to apply
 		pass
+
+	_registered = True

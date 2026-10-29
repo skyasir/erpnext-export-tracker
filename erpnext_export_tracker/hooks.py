@@ -24,6 +24,18 @@ after_migrate = [
 	"erpnext_export_tracker.patches.resync_form_layouts.resync_all",
 ]
 
+# ERPNext and India Compliance match a selling doctype by name against plain
+# module globals -- including the allow-list that decides who may price an item.
+# Those lists have to carry the Proforma Invoice in every process that serves
+# one, and fetching an item or a pricing rule never builds the document, so the
+# controller import cannot be relied on to put it there. Register at the start of
+# each request and each background job instead; it is a flag check after the
+# first call.
+PRICING_REGISTER = "erpnext_export_tracker.selling_doctype.register"
+
+before_request = [PRICING_REGISTER]
+before_job = [PRICING_REGISTER]
+
 doctype_js = {
 	"Quotation": "public/js/quotation.js",
 	"Sales Order": "public/js/sales_order.js",
