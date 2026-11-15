@@ -52,6 +52,8 @@
   "total_qty",
   "total_net_weight",
   "column_break_33",
+  "custom_total_amount_without_additional_charges",
+  "custom_net_total_without_additional_charges",
   "base_total",
   "base_net_total",
   "column_break_33a",
@@ -71,6 +73,7 @@
   "base_total_taxes_and_charges",
   "column_break_46",
   "total_taxes_and_charges",
+  "custom_total_taxes_and_charges_without_additional_charges",
   "totals_section",
   "grand_total",
   "in_words",
@@ -78,6 +81,18 @@
   "column_break_nuxg",
   "rounding_adjustment",
   "rounded_total",
+  "custom_section_break_13yyl",
+  "custom_transportation_amount",
+  "custom_transportation_gst",
+  "custom_transportation_gst_rate",
+  "custom_column_break_jxjap",
+  "custom_freight_amount",
+  "custom_freight_gst",
+  "custom_freight_gst_rate",
+  "custom_column_break_urryq",
+  "custom_insurance_amount",
+  "custom_insurance_gst",
+  "custom_insurance_gst_rate",
   "base_totals_section",
   "base_grand_total",
   "base_in_words",
@@ -618,6 +633,22 @@
    "hide_seconds": 1
   },
   {
+   "fieldname": "custom_total_amount_without_additional_charges",
+   "fieldtype": "Currency",
+   "label": "Total Amount Without Additional Charges",
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_net_total_without_additional_charges",
+   "fieldtype": "Currency",
+   "label": "Net Total Without Additional Charges",
+   "options": "currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
    "fieldname": "base_total",
    "fieldtype": "Currency",
    "hide_days": 1,
@@ -779,6 +810,14 @@
    "read_only": 1
   },
   {
+   "fieldname": "custom_total_taxes_and_charges_without_additional_charges",
+   "fieldtype": "Currency",
+   "label": "Total Taxes and Charges Without Additional Charges",
+   "options": "currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
    "fieldname": "totals_section",
    "fieldtype": "Section Break",
    "hide_days": 1,
@@ -849,6 +888,97 @@
    "options": "currency",
    "read_only": 1,
    "width": "150px"
+  },
+  {
+   "fieldname": "custom_section_break_13yyl",
+   "fieldtype": "Section Break",
+   "hidden": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "custom_transportation_amount",
+   "fieldtype": "Currency",
+   "hidden": 1,
+   "label": "Transportation Amount",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "custom_transportation_gst",
+   "fieldtype": "Currency",
+   "hidden": 1,
+   "label": "Transportation GST",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "custom_transportation_gst_rate",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "Transportation GST Rate",
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_column_break_jxjap",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "custom_freight_amount",
+   "fieldtype": "Currency",
+   "hidden": 1,
+   "label": "Freight Amount",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "custom_freight_gst",
+   "fieldtype": "Currency",
+   "hidden": 1,
+   "label": "Freight GST",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "custom_freight_gst_rate",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "Freight GST Rate",
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_column_break_urryq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "custom_insurance_amount",
+   "fieldtype": "Currency",
+   "hidden": 1,
+   "label": "Insurance Amount",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "custom_insurance_gst",
+   "fieldtype": "Currency",
+   "hidden": 1,
+   "label": "Insurance GST",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "custom_insurance_gst_rate",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "Insurance GST Rate",
+   "read_only": 1
   },
   {
    "fieldname": "base_totals_section",
