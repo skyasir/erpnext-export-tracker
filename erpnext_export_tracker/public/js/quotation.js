@@ -5,7 +5,9 @@
 frappe.ui.form.on("Quotation", {
 	refresh(frm) {
 		if (frm.doc.docstatus !== 1 || frm.doc.status === "Lost") return;
-		if (frm.doc.quotation_to !== "Customer") return;
+		// a proforma may be addressed to a Lead or Prospect as well as a
+		// Customer, the same three a Quotation accepts; the party converts
+		// later, when the Sales Order is raised
 
 		frm.add_custom_button(__("Proforma Invoice"), () => {
 			frappe.model.open_mapped_doc({
