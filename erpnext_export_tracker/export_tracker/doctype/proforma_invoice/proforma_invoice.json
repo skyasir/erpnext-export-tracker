@@ -13,8 +13,11 @@
   "column_break0",
   "company",
   "naming_series",
+  "proforma_to",
+  "party_name",
   "customer",
   "customer_name",
+  "opportunity",
   "column_break_7",
   "order_type",
   "transaction_date",
@@ -282,8 +285,11 @@
    "oldfieldtype": "Link",
    "options": "Customer",
    "print_hide": 1,
-   "reqd": 1,
-   "search_index": 1
+   "reqd": 0,
+   "search_index": 1,
+   "read_only": 1,
+   "depends_on": "eval:doc.proforma_to=='Customer'",
+   "description": "Set from Party. A Lead becomes a Customer when the Sales Order is raised."
   },
   {
    "bold": 1,
@@ -2135,6 +2141,31 @@
    "no_copy": 1,
    "options": "Currency",
    "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "proforma_to",
+   "fieldtype": "Link",
+   "label": "Proforma To",
+   "options": "DocType",
+   "reqd": 1,
+   "in_standard_filter": 1,
+   "link_filters": "[[\"DocType\",\"name\",\"in\",[\"Customer\",\"Lead\",\"Prospect\"]]]"
+  },
+  {
+   "fieldname": "party_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Party",
+   "options": "proforma_to",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "opportunity",
+   "fieldtype": "Link",
+   "label": "Enquiry",
+   "options": "Opportunity",
+   "no_copy": 1,
    "read_only": 1
   }
  ],
