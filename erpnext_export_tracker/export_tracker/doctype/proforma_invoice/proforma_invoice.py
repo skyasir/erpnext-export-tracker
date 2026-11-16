@@ -56,7 +56,28 @@ class ProformaInvoice(SellingController):
 		finally:
 			self.doctype = actual
 
+	def set_party(self):
+		"""A proforma may be addressed to a Customer, a Lead or a Prospect, the
+		same three a Quotation accepts. `customer` is only meaningful for the
+		first; for the others it stays empty until the Sales Order converts the
+		party. Everything downstream reads `customer_name`, which is always set.
+		"""
+		if not self.party_name:
+			return
+
+		if self.proforma_to == "Customer":
+			self.customer = self.party_name
+			self.customer_name = frappe.db.get_value("Customer", self.party_name, "customer_name")
+		else:
+			self.customer = None
+			name_field = "lead_name" if self.proforma_to == "Lead" else "company_name"
+			self.customer_name = (
+				frappe.db.get_value(self.proforma_to, self.party_name, "company_name")
+				or frappe.db.get_value(self.proforma_to, self.party_name, name_field)
+			)
+
 	def validate(self):
+		self.set_party()
 		super().validate()
 		self.set_status()
 		self.sync_buyer()
@@ -143,10 +164,14 @@ def make_sales_order(source_name, target_doc=None):
 	documents share Sales Taxes and Charges, so items, taxes, discount and totals
 	copy across untouched. Returned unsaved: delivery date and warehouse are the
 	order's business, not the proforma's.
+
+	This is where a Lead or Prospect becomes a Customer. A proforma may be
+	addressed to one, but a Sales Order cannot be: it books revenue.
 	"""
 
 	def postprocess(source, target):
 		target.custom_proforma_invoice = source.name
+		target.customer = source.customer or _convert_party_to_customer(source)
 		if source.is_export:
 			target.custom_is_export = 1
 			for field, custom in EXPORT_FIELDS.items():
@@ -177,6 +202,35 @@ def make_sales_order(source_name, target_doc=None):
 	return target
 
 
+def _convert_party_to_customer(proforma):
+	"""Turn the proforma's Lead or Prospect into a Customer, reusing one that
+	already exists for that party rather than making a second."""
+	if proforma.proforma_to == "Customer":
+		return proforma.party_name
+
+	link_field = "lead_name" if proforma.proforma_to == "Lead" else "prospect_name"
+	existing = frappe.db.get_value("Customer", {link_field: proforma.party_name}, "name")
+	if existing:
+		return existing
+
+	from erpnext.selling.doctype.quotation.quotation import _make_customer
+
+	if proforma.quotation:
+		# reuse erpnext's own conversion so the lead is marked Converted and
+		# its contact and address come across exactly as a Quotation would do it
+		return _make_customer(proforma.quotation, ignore_permissions=True).name
+
+	customer = frappe.get_doc({
+		"doctype": "Customer",
+		"customer_name": proforma.customer_name or proforma.party_name,
+		"customer_type": "Company",
+		link_field: proforma.party_name,
+	})
+	customer.flags.ignore_permissions = True
+	customer.insert()
+	return customer.name
+
+
 @frappe.whitelist()
 def make_proforma_invoice(source_name, target_doc=None):
 	"""The proforma a quotation turned into.
@@ -185,20 +239,16 @@ def make_proforma_invoice(source_name, target_doc=None):
 	and each step is a straight copy: the proforma carries the order's structure
 	and the quotation's own item and tax tables map onto it field for field.
 
-	A quotation raised to a Lead has no customer to put on the proforma, so it is
-	refused rather than half-filled.
+	The proforma is addressed to whoever the quotation was: Customer, Lead or
+	Prospect. A Lead is not converted here - that happens when the Sales Order
+	is raised, because an order genuinely needs a Customer and a proforma does
+	not.
 	"""
-	quotation = frappe.db.get_value(
-		"Quotation", source_name, ["quotation_to", "party_name"], as_dict=True
-	)
-	if quotation and quotation.quotation_to != "Customer":
-		frappe.throw(
-			_("Quotation {0} is addressed to a {1}. Convert it to a customer before "
-			  "raising a proforma invoice.").format(source_name, quotation.quotation_to)
-		)
 
 	def postprocess(source, target):
-		target.customer = source.party_name
+		target.proforma_to = source.quotation_to
+		target.party_name = source.party_name
+		target.opportunity = source.opportunity
 		target.quotation = source.name
 		target.run_method("set_missing_values")
 		target.run_method("calculate_taxes_and_totals")
@@ -209,7 +259,11 @@ def make_proforma_invoice(source_name, target_doc=None):
 		{
 			"Quotation": {
 				"doctype": "Proforma Invoice",
-				"field_map": {"transaction_date": "transaction_date"},
+				"field_map": {
+					"transaction_date": "transaction_date",
+					"quotation_to": "proforma_to",
+					"party_name": "party_name",
+				},
 				"field_no_map": ["naming_series", "status", "amended_from", "valid_till",
 				                 "title"],
 				"validation": {"docstatus": ["=", 1]},
