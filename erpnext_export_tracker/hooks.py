@@ -50,21 +50,27 @@ override_doctype_dashboards = {
 	"Sales Order": "erpnext_export_tracker.dashboards.sales_order_dashboard",
 }
 
-# India Compliance registers its GST handling per doctype by name, so a document
+# India Compliance hooks its GST handling onto doctypes by name, so a document
 # it has never heard of gets none. A Proforma Invoice is a Sales Order that has
-# not been agreed yet; give it the same handlers the order gets, and it computes
-# GST the same way. Harmless on a site without India Compliance -- frappe skips
-# a hook whose module will not import.
-GST_TRANSACTION = "india_compliance.gst_india.overrides.transaction"
+# not been agreed yet; proforma_gst runs whatever India Compliance registers for
+# the Sales Order, looked up at run time so its renames between releases don't
+# break the form.
+PROFORMA_GST = "erpnext_export_tracker.proforma_gst"
+
+# India Compliance 16.11.1+ resolves its virtual GST fields per doctype through
+# this hook; older releases never read it.
+ic_virtual_field_resolvers = {
+	"Proforma Invoice": [f"{PROFORMA_GST}.resolve_virtual_fields"],
+}
 
 doc_events = {
 	"Proforma Invoice": {
-		"onload": f"{GST_TRANSACTION}.onload",
-		"before_print": f"{GST_TRANSACTION}.before_print",
-		"before_validate": f"{GST_TRANSACTION}.before_validate_transaction",
-		"validate": f"{GST_TRANSACTION}.validate_transaction",
-		"before_update_after_submit": f"{GST_TRANSACTION}.before_update_after_submit",
-		"after_mapping": f"{GST_TRANSACTION}.after_mapping",
+		"onload": f"{PROFORMA_GST}.onload",
+		"before_print": f"{PROFORMA_GST}.before_print",
+		"before_validate": f"{PROFORMA_GST}.before_validate",
+		"validate": f"{PROFORMA_GST}.validate",
+		"before_update_after_submit": f"{PROFORMA_GST}.before_update_after_submit",
+		"after_mapping": f"{PROFORMA_GST}.after_mapping",
 	},
 	"Sales Order": {
 		"after_insert": "erpnext_export_tracker.events.sales_order.after_insert",
