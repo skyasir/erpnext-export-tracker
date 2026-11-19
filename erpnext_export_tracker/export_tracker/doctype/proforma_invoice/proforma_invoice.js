@@ -11,6 +11,17 @@ frappe.ui.form.on("Proforma Invoice", {
 	},
 
 	refresh(frm) {
+		// India Compliance 16.11.1+ sends its virtual GST fields (GST breakup,
+		// e-commerce supply type) in __onload and fills them only on its own
+		// doctypes; older releases set them on the document and send nothing here.
+		const ic_values = frm.doc.__onload?.ic_virtual_fields;
+		if (ic_values) {
+			for (const [fieldname, value] of Object.entries(ic_values)) {
+				frm.doc[fieldname] = value;
+				frm.refresh_field(fieldname);
+			}
+		}
+
 		if (frm.doc.docstatus === 1 && !frm.doc.sales_order) {
 			frm.add_custom_button(__("Sales Order"), () => make_sales_order(frm), __("Create"));
 			frm.page.set_inner_btn_group_as_primary(__("Create"));
